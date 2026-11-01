@@ -36,7 +36,7 @@ const Home = ({ user, setUser }) => {
                         <div className="badge-icon">
                             <Landmark size={16} />
                         </div>
-                        <span>{isNativeApp ? 'Government of Zimbabwe • Mobile Field App v2.0' : 'Government of Zimbabwe • Online Web Portal'}</span>
+                        <span>{isNativeApp ? 'Government of Zimbabwe ï¿½ Mobile Field App v2.0' : 'Government of Zimbabwe ï¿½ Online Web Portal'}</span>
                     </div>
 
                     <h1 className="hero-title">
