@@ -255,64 +255,10 @@ function Header({ user, setUser }) {
                         {/* Sync Status Indicator with Pending-Count Badge & Retry */}
                         <SyncStatusBadge />
 
-                        {/* Public / Main Navigation Links */}
-                        <div className="hidden md:flex items-center gap-1 mr-2">
-                            <Link to="/" className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-all ${location.pathname === '/' ? 'bg-white/20 text-white' : ''}`}>
-                                Home
-                            </Link>
-                            <Link to="/apply" className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-all ${location.pathname === '/apply' ? 'bg-white/20 text-white' : ''}`}>
-                                Apply
-                            </Link>
-                            <Link to="/track" className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-all ${location.pathname === '/track' ? 'bg-white/20 text-white' : ''}`}>
-                                Track
-                            </Link>
-                            <Link to="/gis-map" className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-all ${location.pathname === '/gis-map' ? 'bg-white/20 text-white' : ''}`}>
-                                GIS
-                            </Link>
-                            <Link to={user && user.role !== "farmer" ? (user.role === "admin" ? "/admin-dashboard" : "/officer-dashboard") : "/officer-login"} className={`px-2.5 py-1.5 rounded-lg text-xs font-bold text-amber-300 hover:text-amber-200 bg-amber-500/20 border border-amber-400/40 hover:bg-amber-500/30 transition-all inline-flex items-center gap-1.5 ${location.pathname === "/officer-login" || location.pathname.includes("officer-dashboard") || location.pathname.includes("admin-dashboard") ? "bg-amber-500/40 text-amber-200" : ""}`}>
-                                <Briefcase size={13} /> Officer Portal
-                            </Link>
-                        </div>
+
                         {user && (
                             <>
-                                {user.role === 'admin' ? (
-                                    <div className="relative">
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPortalLinks(!showPortalLinks)}
-                                            className="header-nav-btn"
-                                        >
-                                            <LayoutGrid size={16} />
-                                            <span className="header-nav-label">Portals</span>
-                                            <ChevronDown size={14} className={`header-chevron ${showPortalLinks ? 'header-chevron-open' : ''}`} />
-                                        </button>
-                                        {showPortalLinks && (
-                                            <div className="header-dropdown">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { navigate('/admin-dashboard'); setShowPortalLinks(false) }}
-                                                    className="header-dropdown-item"
-                                                >
-                                                    <Shield size={16} className="text-red-600" /> Admin Portal
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { navigate('/officer-dashboard'); setShowPortalLinks(false) }}
-                                                    className="header-dropdown-item"
-                                                >
-                                                    <Briefcase size={16} className="text-blue-600" /> Officer Portal
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { navigate('/farmer-dashboard'); setShowPortalLinks(false) }}
-                                                    className="header-dropdown-item"
-                                                >
-                                                    <UserIcon size={16} className="text-emerald-600" /> Farmer Portal
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : null}
+
                                 <div className="header-user-section">
                                     <button
                                         type="button"

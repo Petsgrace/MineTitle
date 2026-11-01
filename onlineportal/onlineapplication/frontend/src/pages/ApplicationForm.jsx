@@ -2211,27 +2211,29 @@ const ApplicationForm = ({ user }) => {
                             </div>
                         )}
 
-                        {/* STEP NAVIGATION BUTTONS */}
-                        <div className="pt-4 flex items-center justify-between gap-3">
-                            {currentStep > 1 && (
+                        {/* STEP NAVIGATION BUTTONS (Enhanced High-Visibility Navigation) */}
+                        <div className="form-step-nav-bar">
+                            {currentStep > 1 ? (
                                 <button
                                     type="button"
                                     onClick={handleBack}
-                                    className="btn border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold py-3 px-6 rounded-xl flex items-center gap-1.5 text-sm"
+                                    className="btn-nav-prev"
                                 >
                                     <ChevronLeft size={18} />
-                                    <span>Back</span>
+                                    <span>Previous Step</span>
                                 </button>
+                            ) : (
+                                <div />
                             )}
 
-                            <div className="ml-auto flex items-center gap-3">
+                            <div className="flex items-center gap-3">
                                 {currentStep < 4 ? (
                                     <button
                                         type="button"
                                         onClick={handleNext}
-                                        className="btn bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 px-8 rounded-xl shadow flex items-center gap-2 text-sm"
+                                        className="btn-nav-next"
                                     >
-                                        <span>Next Part</span>
+                                        <span>Proceed to {currentStep === 1 ? "Part 2: Beneficiary Details" : currentStep === 2 ? "Part 3: Spouse Details" : "Part 4: Review"}</span>
                                         <ChevronRight size={18} />
                                     </button>
                                 ) : (
@@ -2242,7 +2244,7 @@ const ApplicationForm = ({ user }) => {
                                         className="btn bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-3.5 px-10 rounded-xl shadow-lg flex items-center gap-2 text-base"
                                     >
                                         <FileCheck size={20} />
-                                        <span>{isSubmitting ? 'Submitting Application...' : 'Confirm & Submit Application'}</span>
+                                        <span>{isSubmitting ? "Submitting Application..." : "Confirm & Submit Application"}</span>
                                     </button>
                                 )}
                             </div>
