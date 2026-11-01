@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 
 $ProjectDir = $PSScriptRoot
 $AndroidDir = "$ProjectDir\android"
-$JavaHome = "C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot"
+$JavaHome = "C:\Users\peter\AppData\Local\jdk-21\jdk-21.0.12.1+1"
 $AndroidSdk = "C:\Users\peter\AppData\Local\Android\Sdk"
 $BuildTools = "$AndroidSdk\build-tools\34.0.0"
 $KeystorePath = "$AndroidDir\titledeeds.keystore"

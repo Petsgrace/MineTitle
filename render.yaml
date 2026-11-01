@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: title-deeds-one-stop-center
+    runtime: node
+    plan: free
+    buildCommand: yarn
+    startCommand: yarn start
+    envVars:
+      - key: NODE_ENV
+        value: production

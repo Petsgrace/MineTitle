@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Unified Mobile Title Deeds - Processing & Land Management</title>
 
   <!-- Favicon -->
@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-E69LDsRe.js"></script>
+  <script type="module" crossorigin src="./assets/index-DAsAIZe0.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-DFFu_E4G.css">
 </head>
 
@@ -57,12 +57,19 @@
               });
           });
         } else {
-          // If native app, ensure no stale worker intercepts asset requests
+          // If native app, ensure no stale worker or cache intercepts asset requests
           navigator.serviceWorker.getRegistrations().then(function(registrations) {
             registrations.forEach(function(registration) {
               registration.unregister();
             });
           }).catch(function() {});
+          if (window.caches && window.caches.keys) {
+            window.caches.keys().then(function(keys) {
+              keys.forEach(function(key) {
+                window.caches.delete(key);
+              });
+            }).catch(function() {});
+          }
         }
       }
     })();

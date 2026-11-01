@@ -1,7 +1,7 @@
 // Land Harmony - Service Worker
 // Provides offline capability, background sync, and real-time update support
 
-const CACHE_NAME = 'land-harmony-v1';
+const CACHE_NAME = 'land-harmony-v2';
 const OFFLINE_QUEUE_DB = 'land-harmony-db';
 const SYNC_TAG = 'sync-offline-queue';
 
@@ -222,7 +222,7 @@ function broadcastMessage(data) {
 // ─── IndexedDB helpers (used inside service worker) ──────────────────────────
 function openOfflineDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(OFFLINE_QUEUE_DB, 1);
+    const request = indexedDB.open(OFFLINE_QUEUE_DB, 2);
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
       if (!db.objectStoreNames.contains('offline-queue')) {
@@ -230,6 +230,12 @@ function openOfflineDB() {
       }
       if (!db.objectStoreNames.contains('drafts')) {
         db.createObjectStore('drafts', { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains('audit-logs')) {
+        db.createObjectStore('audit-logs', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('beneficiary-media')) {
+        db.createObjectStore('beneficiary-media', { keyPath: 'key' });
       }
     };
     request.onsuccess = () => resolve(request.result);

@@ -1,0 +1,19 @@
+asgiref==3.8.1
+distlib==0.3.9
+Django==5.2
+django-cors-headers==4.6.0
+django-crispy-forms==2.0
+djangorestframework==3.16.1
+filelock==3.18.0
+psycopg2-binary==2.9.11
+pillow==11.2.1
+platformdirs==4.3.7
+python-dotenv==1.0.0
+sqlparse==0.5.2
+tzdata==2024.2
+virtualenv==20.30.0
+
+# Production
+gunicorn==23.0.0
+whitenoise==6.8.2
+django-redis==5.4.0

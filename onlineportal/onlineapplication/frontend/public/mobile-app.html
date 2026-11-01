@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Title Deeds Mobile | Republic of Zimbabwe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Palette Requirements */
+            --forest-green: #1E4620;
+            --forest-green-dark: #143316;
+            --forest-green-light: #2C6430;
+            --forest-green-container: #E8EFE8;
+            --gold-accent: #D4AF37;
+            --gold-badge-bg: #FFF9E6;
+            --gold-border: #E5C158;
+            --amber-active: #E6A117;
+            --bg-cream: #F9F9F7;
+            --card-surface: #FFFFFF;
+            --surface-subtle: #F2F4F0;
+            --border-subtle: #E5E7E2;
+            --border-medium: #D3D8CF;
+            --text-primary: #19231A;
+            --text-secondary: #4F5E52;
+            --text-muted: #7A8B7E;
+            --text-inverse: #FFFFFF;
+            --status-green: #166534;
+            --status-green-bg: #DCFCE7;
+            --status-amber: #854D0E;
+            --status-amber-bg: #FEF3C7;
+            --radius-bento: 20px;
+            --radius-card: 16px;
+            --radius-pill: 9999px;
+            --shadow-subtle: 0 4px 20px rgba(30, 70, 32, 0.06);
+            --shadow-float: 0 10px 30px rgba(20, 51, 22, 0.18);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Mobile Shell Frame */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background: var(--bg-cream);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 84px; /* Bottom nav buffer */
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.08);
+        }
+
+        /* ----------------------------------------------------
+           1. MAP INTEGRATION LAYER (Full-bleed Top Component)
+        ---------------------------------------------------- */
+        .map-layer-container {
+            position: relative;
+            width: 100%;
+            height: 310px;
+            background: #0F1E13;
+            overflow: hidden;
+        }
+
+        #gisCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: crosshair;
+        }
+
+        /* Floating Translucent Search Bar */
+        .floating-search-bar {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(30, 70, 32, 0.18);
+            border-radius: var(--radius-pill);
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            box-shadow: var(--shadow-float);
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+
+        .floating-search-bar:focus-within {
+            background: #FFFFFF;
+            border-color: var(--forest-green);
+            box-shadow: 0 0 0 3px rgba(30, 70, 32, 0.15), var(--shadow-float);
+        }
+
+        .search-icon {
+            width: 18px;
+            height: 18px;
+            color: var(--forest-green);
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+
+        .search-input {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 100%;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .search-action-btn {
+            background: var(--surface-subtle);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--forest-green);
+            cursor: pointer;
+            margin-left: 6px;
+        }
+
+        /* Map Right Margin Floating Controls */
+        .map-fab-group {
+            position: absolute;
+            right: 16px;
+            top: 74px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .map-fab {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--forest-green);
+            color: var(--text-inverse);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: var(--shadow-float);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .map-fab:active {
+            transform: scale(0.92);
+        }
+
+        .map-fab.secondary {
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--forest-green);
+            border: 1px solid var(--border-subtle);
+            width: 38px;
+            height: 38px;
+        }
+
+        /* Layer Toggle Floating Menu */
+        .layer-toggle-menu {
+            position: absolute;
+            right: 16px;
+            top: 126px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-float);
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 25;
+            min-width: 170px;
+            animation: fadeInScale 0.18s ease-out;
+        }
+
+        .layer-toggle-menu.active {
+            display: flex;
+        }
+
+        .layer-option-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s ease;
+        }
+
+        .layer-option-btn:hover, .layer-option-btn.selected {
+            background: var(--forest-green-container);
+            color: var(--forest-green);
+        }
+
+        .layer-indicator-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--forest-green);
+            display: none;
+        }
+
+        .layer-option-btn.selected .layer-indicator-dot {
+            display: block;
+        }
+
+        /* Bottom Map Status Chip */
+        .map-parcel-chip {
+            position: absolute;
+            bottom: 14px;
+            left: 16px;
+            background: rgba(30, 70, 32, 0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: var(--radius-pill);
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-inverse);
+            font-size: 11px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        .beacon-pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--gold-accent);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--gold-accent);
+            animation: pulseGlow 1.8s infinite;
+        }
+
+        /* ----------------------------------------------------
+           2. CITIZEN BENTO DASHBOARD
+        ---------------------------------------------------- */
+        .bento-dashboard-wrapper {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* Header Welcome Row */
+        .citizen-profile-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+
+        .header-title-group h1 {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--forest-green);
+            letter-spacing: -0.3px;
+        }
+
+        .header-title-group p {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn-new-app-cta {
+            background: var(--forest-green);
+            color: var(--text-inverse);
+            border: none;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(30, 70, 32, 0.22);
+            transition: all 0.2s ease;
+        }
+
+        .btn-new-app-cta:active {
+            transform: scale(0.96);
+            background: var(--forest-green-dark);
+        }
+
+        /* Bento Card Container */
+        .bento-card {
+            background: var(--card-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-bento);
+            padding: 18px;
+            box-shadow: var(--shadow-subtle);
+            position: relative;
+        }
+
+        /* Card A: My Registered Properties */
+        .card-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .header-icon-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-circle-box {
+            width: 34px;
+            height: 34px;
+            background: var(--forest-green-container);
+            color: var(--forest-green);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-title-text {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .card-subtitle-text {
+            font-size: 10.5px;
+            color: var(--text-muted);
+        }
+
+        .pill-counter {
+            background: var(--surface-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-pill);
+            padding: 4px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--forest-green);
+        }
+
+        /* Parcel List Items */
+        .parcel-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .parcel-item-box {
+            background: var(--surface-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .parcel-item-box:hover, .parcel-item-box:active {
+            border-color: rgba(30, 70, 32, 0.4);
+            background: #EDF3EC;
+            transform: translateY(-1px);
+        }
+
+        .parcel-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .parcel-plot-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--forest-green);
+        }
+
+        /* Verified Green Badge */
+        .badge-verified {
+            background: var(--status-green-bg);
+            color: var(--status-green);
+            border: 1px solid rgba(22, 101, 52, 0.25);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .parcel-deed-reg {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gold-accent);
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .parcel-meta-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        /* Card B: Application Status Tracker */
+        .tracker-horizontal-container {
+            margin: 14px 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .tracker-step-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .step-bubble {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .step-bubble.completed {
+            background: var(--forest-green);
+            color: var(--text-inverse);
+            border: 1px solid var(--forest-green);
+        }
+
+        .step-bubble.active {
+            background: var(--gold-badge-bg);
+            color: var(--amber-active);
+            border: 2px solid var(--gold-accent);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+        }
+
+        .step-bubble.pending {
+            background: var(--surface-subtle);
+            color: var(--text-muted);
+            border: 1px dashed var(--border-medium);
+        }
+
+        .step-title-label {
+            font-size: 9.5px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .step-title-label.active {
+            color: var(--forest-green);
+            font-weight: 800;
+        }
+
+        .step-title-label.completed {
+            color: var(--text-primary);
+        }
+
+        .tracker-step-line {
+            height: 2px;
+            background: var(--border-medium);
+            flex: 0.8;
+            margin: 0 2px;
+            margin-bottom: 20px;
+        }
+
+        .tracker-step-line.completed {
+            background: var(--forest-green);
+        }
+
+        /* Status Banner Box */
+        .tracker-context-banner {
+            background: var(--surface-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .tracker-context-banner p {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.35;
+        }
+
+        /* Active State Badge Pill */
+        .active-state-badge {
+            background: var(--gold-badge-bg);
+            border: 1px solid var(--gold-border);
+            color: var(--status-amber);
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Card C: Quick-Action Micro-Buttons (Grid 2x2) */
+        .quick-actions-section-title {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: var(--forest-green);
+            margin: 4px 0 2px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .micro-action-card {
+            background: var(--card-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-card);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: var(--shadow-subtle);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+        }
+
+        .micro-action-card:hover, .micro-action-card:active {
+            border-color: rgba(30, 70, 32, 0.35);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(30, 70, 32, 0.08);
+            background: #FDFEFD;
+        }
+
+        .micro-action-icon-wrap {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--forest-green-container);
+            color: var(--forest-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .micro-action-title {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .micro-action-desc {
+            font-size: 9.5px;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        /* ----------------------------------------------------
+           3. LAND REGISTRATION STEP-FORM (Slide-up Wizard View)
+        ---------------------------------------------------- */
+        .modal-scrim {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(14, 30, 16, 0.55);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-scrim.open {
+            display: block;
+            opacity: 1;
+        }
+
+        .slide-up-wizard-sheet {
+            position: fixed;
+            left: 50%;
+            bottom: 0;
+            transform: translate(-50%, 100%);
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            background: var(--card-surface);
+            border-top-left-radius: 26px;
+            border-top-right-radius: 26px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+            z-index: 101;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1);
+        }
+
+        .slide-up-wizard-sheet.open {
+            transform: translate(-50%, 0);
+        }
+
+        .wizard-grab-handle {
+            width: 40px;
+            height: 4px;
+            background: var(--border-medium);
+            border-radius: var(--radius-pill);
+            margin: 12px auto 8px;
+            cursor: pointer;
+        }
+
+        .wizard-header-bar {
+            padding: 8px 20px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .wizard-header-bar h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--forest-green);
+        }
+
+        .wizard-header-bar p {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .btn-close-modal {
+            background: var(--surface-subtle);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        /* Wizard Progress Bar */
+        .wizard-progress-track {
+            padding: 12px 20px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: var(--bg-cream);
+        }
+
+        .progress-indicator-pills {
+            display: flex;
+            gap: 6px;
+        }
+
+        .progress-pill-segment {
+            height: 5px;
+            flex: 1;
+            border-radius: var(--radius-pill);
+            background: var(--border-medium);
+            transition: background 0.3s ease;
+        }
+
+        .progress-pill-segment.filled {
+            background: var(--forest-green);
+        }
+
+        .progress-pill-segment.active {
+            background: var(--gold-accent);
+        }
+
+        .wizard-step-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .wizard-step-name {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--forest-green);
+        }
+
+        .wizard-step-pct {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--forest-green);
+            background: var(--forest-green-container);
+            padding: 2px 7px;
+            border-radius: 6px;
+        }
+
+        /* Wizard Scrollable Form Content */
+        .wizard-content-body {
+            padding: 18px 20px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .wizard-step-page {
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .wizard-step-page.active {
+            display: flex;
+        }
+
+        /* Form Group Fields */
+        .form-group-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field-label-text {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--forest-green-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .field-input-box {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--surface-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .field-input-box:focus {
+            background: #FFFFFF;
+            border-color: var(--forest-green);
+            box-shadow: 0 0 0 3px rgba(30, 70, 32, 0.12);
+        }
+
+        .field-select-box {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--surface-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        /* Drag-and-drop document upload block */
+        .drag-drop-upload-block {
+            border: 2px dashed rgba(30, 70, 32, 0.4);
+            border-radius: 16px;
+            background: var(--surface-subtle);
+            padding: 22px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .drag-drop-upload-block:hover, .drag-drop-upload-block.drag-over {
+            border-color: var(--forest-green);
+            background: var(--forest-green-container);
+            transform: scale(0.99);
+        }
+
+        .upload-icon-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--forest-green-container);
+            color: var(--forest-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-block-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--forest-green);
+        }
+
+        .upload-block-sub {
+            font-size: 10.5px;
+            color: var(--text-muted);
+        }
+
+        /* Pre-attached Validated Document Card */
+        .uploaded-doc-preview {
+            background: #FFFFFF;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .doc-info-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .doc-icon-badge {
+            width: 32px;
+            height: 32px;
+            background: var(--forest-green-container);
+            color: var(--forest-green);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .doc-title-filename {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .doc-meta-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Modal Footer Action Buttons */
+        .wizard-footer-bar {
+            padding: 12px 20px 24px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid var(--border-subtle);
+            background: var(--card-surface);
+        }
+
+        .btn-wizard-back {
+            background: transparent;
+            border: 1px solid var(--border-medium);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            cursor: pointer;
+            flex: 0.8;
+        }
+
+        .btn-wizard-next {
+            background: var(--forest-green);
+            border: none;
+            color: var(--text-inverse);
+            font-weight: 700;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            cursor: pointer;
+            flex: 1.4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(30, 70, 32, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .btn-wizard-next:active {
+            transform: scale(0.98);
+        }
+
+        /* Bottom Persistent Navigation Bar */
+        .bottom-nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 68px;
+            background: #FFFFFF;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            z-index: 50;
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 10px;
+            transition: color 0.15s ease;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--forest-green);
+        }
+
+        .bottom-nav-item.active svg {
+            color: var(--forest-green);
+        }
+
+        /* Toast Feedback */
+        .toast-notification {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--forest-green);
+            color: var(--text-inverse);
+            padding: 10px 18px;
+            border-radius: var(--radius-pill);
+            font-size: 12.5px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-float);
+            z-index: 200;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .toast-notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+            70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(212, 175, 55, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- ====================================================
+         1. MAP INTEGRATION LAYER (Full-bleed Top Component)
+    ==================================================== -->
+    <div class="map-layer-container">
+        <!-- Interactive GIS Map Canvas -->
+        <canvas id="gisCanvas"></canvas>
+
+        <!-- Floating Translucent Search Bar -->
+        <div class="floating-search-bar" id="searchBar">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search Title Deed, Plot Number, or Coordinates..." autocomplete="off">
+            <button class="search-action-btn" id="btnGpsLocate" title="Find Current Coordinates">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Floating Action Buttons on Map Right Margin -->
+        <div class="map-fab-group">
+            <button class="map-fab" id="btnLayerToggle" title="Layer Toggle (Satellite, Zoning, Topographical)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+            </button>
+            <button class="map-fab secondary" id="btnRecenterGis" title="Center Cadastre">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="22" y1="12" x2="18" y2="12"></line>
+                    <line x1="6" y1="12" x2="2" y2="12"></line>
+                    <line x1="12" y1="6" x2="12" y2="2"></line>
+                    <line x1="12" y1="22" x2="12" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Layer Toggle Popup Menu -->
+        <div class="layer-toggle-menu" id="layerMenu">
+            <button class="layer-option-btn selected" data-layer="satellite">
+                <span>🛰️ Satellite</span>
+                <span class="layer-indicator-dot"></span>
+            </button>
+            <button class="layer-option-btn" data-layer="zoning">
+                <span>📐 Zoning</span>
+                <span class="layer-indicator-dot"></span>
+            </button>
+            <button class="layer-option-btn" data-layer="topographical">
+                <span>⛰️ Topographical</span>
+                <span class="layer-indicator-dot"></span>
+            </button>
+        </div>
+
+        <!-- Bottom Left Interactive Parcel Inspection Chip -->
+        <div class="map-parcel-chip" id="parcelChip">
+            <div class="beacon-pulse-dot"></div>
+            <span id="activeParcelLabel">Plot 402-B • Verified Cadastre</span>
+        </div>
+    </div>
+
+    <!-- ====================================================
+         2. CITIZEN BENTO DASHBOARD
+    ==================================================== -->
+    <div class="bento-dashboard-wrapper">
+
+        <!-- Header Row -->
+        <div class="citizen-profile-header">
+            <div class="header-title-group">
+                <h1>Citizen Land Portal</h1>
+                <p>Ministry of Lands & Cadastral Registry • Zimbabwe</p>
+            </div>
+            <button class="btn-new-app-cta" id="btnOpenNewApp">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>New Title</span>
+            </button>
+        </div>
+
+        <!-- CARD A (Large): "My Registered Properties" -->
+        <div class="bento-card" id="cardProperties">
+            <div class="card-header-bar">
+                <div class="header-icon-label">
+                    <div class="icon-circle-box">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title-text">My Registered Properties</div>
+                        <div class="card-subtitle-text">2 Land Parcels Secured with State Deeds</div>
+                    </div>
+                </div>
+                <div class="pill-counter">Active Freeholds</div>
+            </div>
+
+            <div class="parcel-items-list">
+                <!-- Parcel Item 1 -->
+                <div class="parcel-item-box" onclick="inspectParcel('Plot 402-B', 'Deed Reg: #2026/89B', 'Gwebi Agricultural Block, Harare West • 12.45 Ha')">
+                    <div class="parcel-top-row">
+                        <span class="parcel-plot-title">Plot 402-B, Verified</span>
+                        <span class="badge-verified">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Verified
+                        </span>
+                    </div>
+                    <span class="parcel-deed-reg">Deed Reg: #2026/89B</span>
+                    <p class="parcel-meta-text">Gwebi Agricultural Block, Harare West • 12.45 Hectares • A2 Freehold Granted</p>
+                </div>
+
+                <!-- Parcel Item 2 -->
+                <div class="parcel-item-box" onclick="inspectParcel('Stand 1184-East', 'Deed Reg: #2025/1102A', 'Borrowdale Brooke Extension, Harare • 0.85 Ha')">
+                    <div class="parcel-top-row">
+                        <span class="parcel-plot-title">Stand 1184-East, Verified</span>
+                        <span class="badge-verified">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Verified
+                        </span>
+                    </div>
+                    <span class="parcel-deed-reg">Deed Reg: #2025/1102A</span>
+                    <p class="parcel-meta-text">Borrowdale Brooke Extension, Harare • 0.85 Hectares • Residential Freehold</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD B (Medium): "Application Status Tracker" -->
+        <div class="bento-card" id="cardTracker">
+            <div class="card-header-bar">
+                <div>
+                    <div class="card-title-text">Application Status Tracker</div>
+                    <div class="card-subtitle-text">Ref: APP-ZW-2026-9842 • Zvimba North (Plot 403-Ext)</div>
+                </div>
+                <div class="active-state-badge">
+                    <span style="width:6px;height:6px;border-radius:50%;background:var(--amber-active);display:inline-block;"></span>
+                    Registry Review
+                </div>
+            </div>
+
+            <!-- Horizontal linear step-by-step indicator: [Submitted] -> [Under Survey] -> [Registry Review] (Active State) -> [Issued] -->
+            <div class="tracker-horizontal-container">
+                <!-- Step 1: Submitted -->
+                <div class="tracker-step-node">
+                    <div class="step-bubble completed">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <span class="step-title-label completed">Submitted</span>
+                </div>
+
+                <div class="tracker-step-line completed"></div>
+
+                <!-- Step 2: Under Survey -->
+                <div class="tracker-step-node">
+                    <div class="step-bubble completed">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <span class="step-title-label completed">Under Survey</span>
+                </div>
+
+                <div class="tracker-step-line completed"></div>
+
+                <!-- Step 3: Registry Review (Active State) -->
+                <div class="tracker-step-node">
+                    <div class="step-bubble active">
+                        3
+                    </div>
+                    <span class="step-title-label active">Registry Review</span>
+                </div>
+
+                <div class="tracker-step-line"></div>
+
+                <!-- Step 4: Issued -->
+                <div class="tracker-step-node">
+                    <div class="step-bubble pending">
+                        4
+                    </div>
+                    <span class="step-title-label">Issued</span>
+                </div>
+            </div>
+
+            <div class="tracker-context-banner">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E4620" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <p>Cadastral mapping verified by Surveyor General. Legal examiner finalizing deed registration stamp.</p>
+            </div>
+        </div>
+
+        <!-- CARD C (Grid 2x2): Quick-action micro-buttons with clean icons -->
+        <div class="quick-actions-section-title">
+            <span>Statutory Quick Actions</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">4 Services</span>
+        </div>
+
+        <div class="quick-actions-grid">
+            <!-- Micro-button 1: Transfer Ownership -->
+            <button class="micro-action-card" onclick="triggerAction('Transfer Ownership')">
+                <div class="micro-action-icon-wrap">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="17 1 21 5 17 9"></polyline>
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                        <polyline points="7 23 3 19 7 15"></polyline>
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="micro-action-title">Transfer Ownership</div>
+                    <div class="micro-action-desc">Conveyance & Title Assignment</div>
+                </div>
+            </button>
+
+            <!-- Micro-button 2: Pay Land Rates -->
+            <button class="micro-action-card" onclick="triggerAction('Pay Land Rates')">
+                <div class="micro-action-icon-wrap">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                </div>
+                <div>
+                    <div class="micro-action-title">Pay Land Rates</div>
+                    <div class="micro-action-desc">Ground Lease & Treasury Dues</div>
+                </div>
+            </button>
+
+            <!-- Micro-button 3: Lodged Disputes -->
+            <button class="micro-action-card" onclick="triggerAction('Lodged Disputes')">
+                <div class="micro-action-icon-wrap">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+                <div>
+                    <div class="micro-action-title">Lodged Disputes</div>
+                    <div class="micro-action-desc">ZLC Clearance & Caveats</div>
+                </div>
+            </button>
+
+            <!-- Micro-button 4: Order Valuation -->
+            <button class="micro-action-card" onclick="triggerAction('Order Valuation')">
+                <div class="micro-action-icon-wrap">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                </div>
+                <div>
+                    <div class="micro-action-title">Order Valuation</div>
+                    <div class="micro-action-desc">Government Gazette Cadastre</div>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Persistent Bottom Nav -->
+    <nav class="bottom-nav-bar">
+        <a class="bottom-nav-item active" onclick="setActiveNav(this)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Dashboard</span>
+        </a>
+        <a class="bottom-nav-item" onclick="setActiveNav(this); recenterMap();">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                <line x1="8" y1="2" x2="8" y2="18"></line>
+                <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+            <span>GIS Map</span>
+        </a>
+        <a class="bottom-nav-item" onclick="openWizard();">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <span>Apply</span>
+        </a>
+        <a class="bottom-nav-item" onclick="setActiveNav(this); inspectParcel('Plot 402-B', 'Deed Reg: #2026/89B', 'Gwebi Block');">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            <span>My Deeds</span>
+        </a>
+    </nav>
+
+</div>
+
+<!-- ====================================================
+     3. LAND REGISTRATION STEP-FORM (Slide-up Wizard View)
+==================================================== -->
+<div class="modal-scrim" id="modalScrim" onclick="closeWizard()"></div>
+
+<div class="slide-up-wizard-sheet" id="wizardSheet">
+    <div class="wizard-grab-handle" onclick="closeWizard()"></div>
+
+    <div class="wizard-header-bar">
+        <div>
+            <h2>New Land Title Application</h2>
+            <p>Cadastral Tenure Securitization & Digital Conveyancing</p>
+        </div>
+        <button class="btn-close-modal" onclick="closeWizard()" title="Close Form">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Step Progress Indicator -->
+    <div class="wizard-progress-track">
+        <div class="progress-indicator-pills">
+            <div class="progress-pill-segment filled" id="pillStep1"></div>
+            <div class="progress-pill-segment" id="pillStep2"></div>
+            <div class="progress-pill-segment" id="pillStep3"></div>
+        </div>
+        <div class="wizard-step-title-row">
+            <span class="wizard-step-name" id="wizardStepHeader">Step 1 of 3: Citizen Identification</span>
+            <span class="wizard-step-pct" id="wizardStepPct">33% Complete</span>
+        </div>
+    </div>
+
+    <!-- Wizard Form Steps -->
+    <div class="wizard-content-body">
+
+        <!-- STEP 1: CITIZEN IDENTIFICATION -->
+        <div class="wizard-step-page active" id="stepPage1">
+            <div class="form-group-field">
+                <label class="field-label-text">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E4620" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Full Legal Name
+                </label>
+                <input type="text" class="field-input-box" id="legalNameInput" value="Tendai Emmanuel Moyo" placeholder="Enter full legal name as on national ID">
+            </div>
+
+            <div class="form-group-field">
+                <label class="field-label-text">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E4620" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line></svg>
+                    National ID / Passport Number
+                </label>
+                <input type="text" class="field-input-box" id="nationalIdInput" value="63-2049182-X-42" placeholder="e.g. 63-2049182-X-42">
+            </div>
+
+            <div class="form-group-field">
+                <label class="field-label-text">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E4620" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    Contact Phone Number
+                </label>
+                <input type="tel" class="field-input-box" id="phoneInput" value="+263 77 219 4092" placeholder="+263 7X XXX XXXX">
+            </div>
+
+            <div style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E4620" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span style="font-size: 11px; color: var(--text-secondary); line-height: 1.35;">Identity credentials are cryptographically matched with the Registrar General’s civil database.</span>
+            </div>
+        </div>
+
+        <!-- STEP 2: PARCEL DIMENSIONS & LOCATION -->
+        <div class="wizard-step-page" id="stepPage2">
+            <div class="form-group-field">
+                <label class="field-label-text">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E4620" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                    Parcel Dimensions (Hectares)
+                </label>
+                <div style="position: relative;">
+                    <input type="text" class="field-input-box" id="hectaresInput" value="15.50" placeholder="e.g. 15.50">
+                    <span style="position: absolute; right: 14px; top: 12px; font-weight: 700; font-size: 13px; color: var(--forest-green);">Ha</span>
+                </div>
+            </div>
+
+            <div class="form-group-field">
+                <label class="field-label-text">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E4620" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    Province & District Location
+                </label>
+                <select class="field-select-box" id="districtSelect">
+                    <option value="Mashonaland West - Zvimba District" selected>Mashonaland West - Zvimba District</option>
+                    <option value="Harare Metropolitan - Borrowdale Ward">Harare Metropolitan - Borrowdale Ward</option>
+                    <option value="Mashonaland East - Goromonzi North">Mashonaland East - Goromonzi North</option>
+                    <option value="Midlands - Gweru Farmlands">Midlands - Gweru Farmlands</option>
+                </select>
+            </div>
+
+            <div class="form-group-field">
+                <label class="field-label-text">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E4620" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                    Cadastral Beacon Reference (GPS/Survey ID)
+                </label>
+                <input type="text" class="field-input-box" id="beaconInput" value="BCN-ZW-9921-A to D" placeholder="e.g. BCN-ZW-9921-A to D">
+            </div>
+
+            <div style="background: var(--forest-green-container); border: 1px solid rgba(30,70,32,0.2); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E4620" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon></svg>
+                <span style="font-size: 11px; color: var(--forest-green-dark); line-height: 1.35;">Coordinates automatically overlay on the Surveyor General’s national cadastre framework.</span>
+            </div>
+        </div>
+
+        <!-- STEP 3: DOCUMENT VERIFICATION (DRAG-AND-DROP) -->
+        <div class="wizard-step-page" id="stepPage3">
+            <div>
+                <h3 style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Required Statutory Documentation</h3>
+                <p style="font-size: 11px; color: var(--text-muted);">Attach authenticated survey diagrams, offer letters, or conveyancing deed of sale.</p>
+            </div>
+
+            <!-- Drag-and-drop document upload block for "Deed of Sale / Survey Plan" -->
+            <div class="drag-drop-upload-block" id="dragDropArea" onclick="simulateUpload()">
+                <div class="upload-icon-circle">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <div class="upload-block-title">Deed of Sale / Survey Plan</div>
+                <div class="upload-block-sub">Tap or drag & drop certified PDF, TIFF or JPG (Max 25MB)</div>
+            </div>
+
+            <!-- Attached File Mock Preview -->
+            <div class="uploaded-doc-preview" id="docPreviewBox">
+                <div class="doc-info-group">
+                    <div class="doc-icon-badge">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="doc-title-filename">Survey_Plan_Gwebi_Plot402B.pdf</div>
+                        <div class="doc-meta-sub">2.4 MB • Cadastral Beacon Seal Verified</div>
+                    </div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="9 12 12 15 16 10"></polyline>
+                </svg>
+            </div>
+
+            <div style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span style="font-size: 11px; color: var(--text-secondary); line-height: 1.35;">Legal declaration: False submissions are subject to the Land Commission Act penalties.</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Wizard Action Buttons -->
+    <div class="wizard-footer-bar">
+        <button class="btn-wizard-back" id="btnWizardBack" onclick="navigateWizard(-1)">Cancel</button>
+        <button class="btn-wizard-next" id="btnWizardNext" onclick="navigateWizard(1)">
+            <span id="nextBtnText">Continue</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<!-- Floating Toast Notification -->
+<div class="toast-notification" id="toastMessage">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <span id="toastText">Action Successful</span>
+</div>
+
+<script>
+    // ====================================================
+    // GIS MAP CANVAS ENGINE & LAYER RENDERING
+    // ====================================================
+    const canvas = document.getElementById('gisCanvas');
+    const ctx = canvas.getContext('2d');
+    let activeLayer = 'satellite'; // 'satellite', 'zoning', 'topographical'
+    let selectedParcel = 'Plot 402-B';
+
+    function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        drawMap();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // Cadastral Parcel Coordinates (Normalized to Canvas width & height)
+    const parcels = [
+        {
+            id: 'Plot 402-B',
+            label: 'Plot 402-B (12.45 Ha)',
+            deed: 'Deed Reg: #2026/89B',
+            coords: [[0.08, 0.36], [0.52, 0.32], [0.48, 0.88], [0.06, 0.84]],
+            zone: 'Agricultural',
+            zoneColor: 'rgba(76, 175, 80, 0.35)',
+            status: 'Verified Title'
+        },
+        {
+            id: 'Stand 1184-East',
+            label: 'Stand 1184-East (0.85 Ha)',
+            deed: 'Deed Reg: #2025/1102A',
+            coords: [[0.56, 0.35], [0.94, 0.37], [0.92, 0.86], [0.54, 0.87]],
+            zone: 'Residential',
+            zoneColor: 'rgba(255, 152, 0, 0.35)',
+            status: 'Verified Title'
+        },
+        {
+            id: 'Plot 402-A',
+            label: 'Plot 402-A (9.80 Ha)',
+            deed: 'Deed Reg: #2024/412B',
+            coords: [[0.10, 0.04], [0.50, 0.02], [0.52, 0.30], [0.08, 0.34]],
+            zone: 'Agricultural',
+            zoneColor: 'rgba(76, 175, 80, 0.25)',
+            status: 'Surveyed'
+        }
+    ];
+
+    function drawMap() {
+        const w = canvas.parentElement.clientWidth;
+        const h = canvas.parentElement.clientHeight;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // 1. Draw Layer Background
+        if (activeLayer === 'satellite') {
+            // Satellite Imagery Simulation (Dark terrain grid + subtle gradient)
+            const grad = ctx.createLinearGradient(0, 0, w, h);
+            grad.addColorStop(0, '#132B16');
+            grad.addColorStop(0.5, '#193A1E');
+            grad.addColorStop(1, '#0F2113');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            // Satellite ortho grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.lineWidth = 1;
+            const step = 38;
+            for (let x = 0; x < w; x += step) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            for (let y = 0; y < h; y += step) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+        } else if (activeLayer === 'zoning') {
+            // Zoning Classification Layer
+            ctx.fillStyle = '#E8EFE8';
+            ctx.fillRect(0, 0, w, h);
+
+            // Zone regions
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.18)'; // Agric zone
+            ctx.fillRect(0, 0, w * 0.54, h);
+
+            ctx.fillStyle = 'rgba(255, 152, 0, 0.18)'; // Residential zone
+            ctx.fillRect(w * 0.54, 0, w * 0.46, h);
+
+            // Zone Labels
+            ctx.fillStyle = '#2E7D32';
+            ctx.font = '700 11px Inter, sans-serif';
+            ctx.fillText('ZONE A: INTENSIVE AGRI-HOLDINGS', 20, 95);
+
+            ctx.fillStyle = '#D97706';
+            ctx.fillText('ZONE R: LOW-DENSITY RESIDENTIAL', w * 0.56, 95);
+        } else if (activeLayer === 'topographical') {
+            // Topographical Layer with Elevation Contours
+            ctx.fillStyle = '#F5F4EE';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.strokeStyle = 'rgba(141, 110, 99, 0.35)';
+            ctx.lineWidth = 1.5;
+
+            // Elevation curves
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, 60 + i * 45);
+                ctx.bezierCurveTo(w * 0.25, 40 + i * 48, w * 0.65, 90 + i * 42, w, 70 + i * 46);
+                ctx.stroke();
+
+                ctx.fillStyle = '#8D6E63';
+                ctx.font = '500 9px JetBrains Mono, monospace';
+                ctx.fillText((1480 + i * 10) + 'm', w * 0.75, 84 + i * 45);
+            }
+        }
+
+        // 2. Road Reserve Corridor
+        ctx.fillStyle = 'rgba(203, 213, 225, 0.35)';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.52, h * 0.32);
+        ctx.lineTo(w * 0.56, h * 0.35);
+        ctx.lineTo(w * 0.54, h * 0.87);
+        ctx.lineTo(w * 0.48, h * 0.88);
+        ctx.closePath();
+        ctx.fill();
+
+        // 3. Cadastral Parcel Boundaries
+        parcels.forEach(p => {
+            const isSelected = p.id === selectedParcel;
+
+            ctx.beginPath();
+            p.coords.forEach((pt, i) => {
+                const px = pt[0] * w;
+                const py = pt[1] * h;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            });
+            ctx.closePath();
+
+            // Fill
+            if (activeLayer === 'zoning') {
+                ctx.fillStyle = p.zoneColor;
+            } else if (isSelected) {
+                ctx.fillStyle = 'rgba(212, 175, 55, 0.28)';
+            } else if (activeLayer === 'satellite') {
+                ctx.fillStyle = 'rgba(46, 125, 50, 0.22)';
+            } else {
+                ctx.fillStyle = 'rgba(30, 70, 32, 0.08)';
+            }
+            ctx.fill();
+
+            // Stroke
+            ctx.lineWidth = isSelected ? 3.5 : 2;
+            if (isSelected) {
+                ctx.strokeStyle = '#D4AF37';
+            } else if (activeLayer === 'satellite') {
+                ctx.strokeStyle = '#4ADE80';
+            } else {
+                ctx.strokeStyle = '#1E4620';
+            }
+            ctx.stroke();
+
+            // Parcel Center Labels
+            const cx = (p.coords[0][0] + p.coords[1][0] + p.coords[2][0] + p.coords[3][0]) / 4 * w;
+            const cy = (p.coords[0][1] + p.coords[1][1] + p.coords[2][1] + p.coords[3][1]) / 4 * h;
+
+            ctx.fillStyle = isSelected ? '#FFFFFF' : (activeLayer === 'satellite' ? '#E2FBE8' : '#1E4620');
+            ctx.font = '700 12px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(p.id, cx, cy - 6);
+
+            ctx.font = '600 9.5px JetBrains Mono, monospace';
+            ctx.fillStyle = isSelected ? '#D4AF37' : (activeLayer === 'satellite' ? '#A7F3D0' : '#4F5E52');
+            ctx.fillText(p.deed.replace('Deed Reg: ', ''), cx, cy + 10);
+        });
+
+        // 4. Survey Beacons (Gold circular pins on vertices)
+        parcels.forEach(p => {
+            p.coords.forEach(pt => {
+                const px = pt[0] * w;
+                const py = pt[1] * h;
+
+                ctx.beginPath();
+                ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+                ctx.fillStyle = '#D4AF37';
+                ctx.fill();
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = '#1E4620';
+                ctx.stroke();
+            });
+        });
+    }
+
+    // Interactive Parcel Clicking on Canvas
+    canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clickX = (e.clientX - rect.left) / rect.width;
+        const clickY = (e.clientY - rect.top) / rect.height;
+
+        let found = null;
+        if (clickX < 0.54 && clickY > 0.35) {
+            found = 'Plot 402-B';
+        } else if (clickX >= 0.54 && clickY > 0.35) {
+            found = 'Stand 1184-East';
+        } else if (clickY <= 0.35) {
+            found = 'Plot 402-A';
+        }
+
+        if (found) {
+            selectedParcel = found;
+            document.getElementById('activeParcelLabel').textContent = `${found} • Verified Cadastre`;
+            drawMap();
+            showToast(`Cadastral Selected: ${found}`);
+        }
+    });
+
+    // Layer Toggle Menu
+    const btnLayerToggle = document.getElementById('btnLayerToggle');
+    const layerMenu = document.getElementById('layerMenu');
+
+    btnLayerToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        layerMenu.classList.toggle('active');
+    });
+
+    document.querySelectorAll('.layer-option-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.layer-option-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            activeLayer = btn.getAttribute('data-layer');
+            layerMenu.classList.remove('active');
+            drawMap();
+            showToast(`Active Map Layer: ${activeLayer.toUpperCase()}`);
+        });
+    });
+
+    document.addEventListener('click', () => {
+        layerMenu.classList.remove('active');
+    });
+
+    function recenterMap() {
+        selectedParcel = 'Plot 402-B';
+        document.getElementById('activeParcelLabel').textContent = `Plot 402-B • Verified Cadastre`;
+        drawMap();
+        showToast('Centered on Registered Property Plot 402-B');
+    }
+
+    document.getElementById('btnRecenterGis').addEventListener('click', recenterMap);
+    document.getElementById('btnGpsLocate').addEventListener('click', () => {
+        showToast('GPS Locked: 17°49\'12.4"S 31°03\'24.8"E');
+    });
+
+    // ====================================================
+    // BENTO CARD ACTIONS & PARCEL INSPECTION
+    // ====================================================
+    function inspectParcel(plotId, deedReg, meta) {
+        selectedParcel = plotId;
+        document.getElementById('activeParcelLabel').textContent = `${plotId} • Verified Cadastre`;
+        drawMap();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showToast(`Viewing Cadastral Boundary: ${plotId}`);
+    }
+
+    function triggerAction(actionName) {
+        if (actionName === 'Transfer Ownership' || actionName === 'Pay Land Rates') {
+            openWizard();
+            showToast(`Initiating ${actionName} Wizard...`);
+        } else {
+            showToast(`Opening Statutory Portal: ${actionName}`);
+        }
+    }
+
+    function setActiveNav(el) {
+        document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    // ====================================================
+    // 3. LAND REGISTRATION STEP-FORM (Slide-up Wizard View)
+    // ====================================================
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    function openWizard() {
+        document.getElementById('modalScrim').classList.add('open');
+        document.getElementById('wizardSheet').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeWizard() {
+        document.getElementById('modalScrim').classList.remove('open');
+        document.getElementById('wizardSheet').classList.remove('open');
+        document.body.style.overflow = 'auto';
+    }
+
+    document.getElementById('btnOpenNewApp').addEventListener('click', openWizard);
+
+    function updateWizardUI() {
+        // Update Step Pages
+        document.querySelectorAll('.wizard-step-page').forEach((page, index) => {
+            page.classList.toggle('active', index + 1 === currentStep);
+        });
+
+        // Update Progress Pills
+        for (let i = 1; i <= totalSteps; i++) {
+            const pill = document.getElementById(`pillStep${i}`);
+            pill.className = 'progress-pill-segment';
+            if (i < currentStep) pill.classList.add('filled');
+            else if (i === currentStep) pill.classList.add('active');
+        }
+
+        // Header Titles
+        const titles = [
+            "Step 1 of 3: Citizen Identification",
+            "Step 2 of 3: Parcel Dimensions & Location",
+            "Step 3 of 3: Deed & Survey Plan Upload"
+        ];
+        document.getElementById('wizardStepHeader').textContent = titles[currentStep - 1];
+        document.getElementById('wizardStepPct').textContent = `${Math.round((currentStep / totalSteps) * 100)}% Complete`;
+
+        // Button texts
+        const backBtn = document.getElementById('btnWizardBack');
+        const nextBtnText = document.getElementById('nextBtnText');
+
+        if (currentStep === 1) {
+            backBtn.textContent = 'Cancel';
+        } else {
+            backBtn.textContent = 'Back';
+        }
+
+        if (currentStep === totalSteps) {
+            nextBtnText.textContent = 'Submit Title Deed Application';
+        } else {
+            nextBtnText.textContent = 'Continue';
+        }
+    }
+
+    function navigateWizard(direction) {
+        if (direction === -1) {
+            if (currentStep === 1) {
+                closeWizard();
+            } else {
+                currentStep--;
+                updateWizardUI();
+            }
+        } else if (direction === 1) {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateWizardUI();
+            } else {
+                // Submit Form
+                closeWizard();
+                currentStep = 1;
+                updateWizardUI();
+                showToast('Application APP-ZW-2026-9843 submitted to Surveyor General!');
+            }
+        }
+    }
+
+    function simulateUpload() {
+        showToast('Document Validated: Certified Survey Plan Loaded');
+    }
+
+    // Drag and drop event handling
+    const dropArea = document.getElementById('dragDropArea');
+    ['dragenter', 'dragover'].forEach(name => {
+        dropArea.addEventListener(name, (e) => {
+            e.preventDefault();
+            dropArea.classList.add('drag-over');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(name => {
+        dropArea.addEventListener(name, (e) => {
+            e.preventDefault();
+            dropArea.classList.remove('drag-over');
+            if (name === 'drop') {
+                showToast('Survey Document Uploaded & Scanned');
+            }
+        });
+    });
+
+    // Toast Functionality
+    let toastTimeout;
+    function showToast(message) {
+        const toast = document.getElementById('toastMessage');
+        document.getElementById('toastText').textContent = message;
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // Initial Render
+    setTimeout(resizeCanvas, 50);
+</script>
+
+</body>
+</html>

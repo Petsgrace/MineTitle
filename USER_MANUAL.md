@@ -85,7 +85,7 @@ On the **Beneficiary Dashboard**:
 
 ### Step 3: Tracking Application Progress (`Track`)
 1. Tap **Track** in the navigation bar.
-2. Enter your **Reference Number** (e.g., `REF-2026-001`) or **National ID**.
+2. Enter your **1. National ID**, **2. Reference No.** (e.g., `TD-2026-00005`), and **3. Receipt Number** (e.g., `REC-2026-00001`).
 3. View real-time stage completion across the 9 official processing stages.
 
 ### Step 4: Viewing Farm Boundaries on the GIS Map (`GIS`)

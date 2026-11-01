@@ -1,0 +1,14 @@
+{
+  "name": "title-deeds-one-stop-center",
+  "version": "2.0.0",
+  "description": "Ministry of Lands and Rural Development Zimbabwe — Title Deeds One Stop Center Web & Mobile Backend",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "echo \"Pre-built production assets verified in onlineportal/onlineapplication/frontend/dist and mobile_application/www\"",
+    "start": "node server.js"
+  },
+  "private": true
+}

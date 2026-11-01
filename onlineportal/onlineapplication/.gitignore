@@ -1,0 +1,48 @@
+# ─── Environment ──────────────────────────
+.env
+*.env.local
+
+# ─── Python ───────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+build/
+*.egg
+
+# ─── Django ───────────────────────────────
+staticfiles/
+media/
+logs/
+db.sqlite3
+*.log
+
+# ─── Node / Frontend ─────────────────────
+frontend/node_modules/
+
+# ─── IDE / OS ─────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+Thumbs.db
+.DS_Store
+
+# ─── Virtual environment ─────────────────
+venv/
+.venv/
+
+# ─── Temporary output / debug artifacts ──
+*.out
+check_output.txt
+test_output.txt
+test_fail.txt
+out_clean.json
+output.json
+
+# ─── Agent / AI workspace ────────────────
+.agents/
+.gemini/
+
+

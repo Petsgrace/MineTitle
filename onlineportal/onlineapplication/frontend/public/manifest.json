@@ -1,0 +1,29 @@
+{
+  "name": "Unified Mobile Title Deeds System",
+  "short_name": "Title Deeds",
+  "description": "Ministry of Lands Zimbabwe - Unified Title Deed Processing and Land Management System",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a2e1a",
+  "theme_color": "#1a5c32",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["government", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}

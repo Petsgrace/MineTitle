@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Title Deed Processing System | Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        // Seamlessly route to the unified Title Deeds application interface
+        window.location.replace('admin.html');
+    </script>
+    <style>
+        .role-selector-container {
+            display: flex; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            border-radius: 10px; padding: 4px; margin-bottom: 1.25rem; gap: 4px;
+        }
+        .role-tab {
+            flex: 1; padding: 0.6rem 0.5rem; border: none; background: transparent;
+            color: var(--text-secondary); font-weight: 600; font-size: 0.85rem;
+            border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex;
+            align-items: center; justify-content: center; gap: 0.4rem;
+        }
+        .role-tab.active {
+            background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4);
+        }
+        .dept-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.4rem;
+        }
+        .dept-option {
+            display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.65rem;
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .dept-option:hover {
+            border-color: rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.05);
+        }
+        .dept-option.selected {
+            border-color: #22c55e; background: rgba(34, 197, 94, 0.15); box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
+        }
+        .dept-icon { font-size: 1.2rem; }
+        .dept-title { font-size: 0.8rem; font-weight: 700; color: #fff; line-height: 1.2; }
+        .dept-sub { font-size: 0.68rem; color: var(--text-secondary); margin-top: 2px; }
+    </style>
+</head>
+<body>
+    <!-- ===== PUBLIC NAVBAR ===== -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <img src="logo.png" alt="Republic of Zimbabwe Coat of Arms" style="height:36px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(16,185,129,0.4));">
+            <span>Title Deeds System</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link active">Home</a>
+            <a href="farmer.html" class="nav-link">Apply</a>
+            <a href="track.html" class="nav-link">Track</a>
+            <a href="gis.html" class="nav-link">GIS</a>
+            <a href="index.html" class="nav-link">Portal</a>
+            <a href="officer-login.html" class="nav-link nav-btn-officer">🛡️ Officer</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 520px; margin-top: 4vh;">
+        <div class="card fade-in">
+            <h1 class="text-center">Deed Portal</h1>
+            <p class="text-center" style="margin-bottom: 1.5rem; color: var(--text-secondary);">Secure remote access for Farmers & Staff</p>
+            
+            <!-- Role Switcher: Farmer vs Officer -->
+            <div class="role-selector-container">
+                <button type="button" class="role-tab active" id="tabFarmer" onclick="selectRole('farmer')">
+                    <span>🌾</span>
+                    <span>Farmer</span>
+                </button>
+                <button type="button" class="role-tab" id="tabOfficer" onclick="selectRole('officer')">
+                    <span>🛡️</span>
+                    <span>Officer</span>
+                </button>
+            </div>
+
+            <!-- Officer Department Selector (Shows when Officer role is active) -->
+            <div id="officerDeptSection" style="display:none; margin-bottom: 1.25rem; padding: 0.85rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px;">
+                <label style="display:block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.5rem; letter-spacing: 0.05em;">
+                    Select Officer Department
+                </label>
+                <div class="dept-grid">
+                    <div class="dept-option selected" id="dept-LIMS" onclick="selectDept('LIMS_ROLE', 'James Mukuru', 'lims@agric.gov.zw', 'LIMS')">
+                        <span class="dept-icon">🗺️</span>
+                        <div>
+                            <div class="dept-title">LIMS</div>
+                            <div class="dept-sub">Cadastral Survey</div>
+                        </div>
+                    </div>
+                    <div class="dept-option" id="dept-ACCOUNTS" onclick="selectDept('ACCOUNTS_ROLE', 'Tatenda Ndlovu', 'accounts@agric.gov.zw', 'Accounts')">
+                        <span class="dept-icon">💰</span>
+                        <div>
+                            <div class="dept-title">Accounts</div>
+                            <div class="dept-sub">Finance & Fees</div>
+                        </div>
+                    </div>
+                    <div class="dept-option" id="dept-ESTATES" onclick="selectDept('ESTATES_ROLE', 'Sarah Chisvo', 'estates@agric.gov.zw', 'Estates')">
+                        <span class="dept-icon">🏠</span>
+                        <div>
+                            <div class="dept-title">Estates</div>
+                            <div class="dept-sub">Succession & Consent</div>
+                        </div>
+                    </div>
+                    <div class="dept-option" id="dept-ZLC" onclick="selectDept('ZLC_ROLE', 'Rutendo Pfende', 'zlc@agric.gov.zw', 'ZLC')">
+                        <span class="dept-icon">⚖️</span>
+                        <div>
+                            <div class="dept-title">ZLC</div>
+                            <div class="dept-sub">Disputes Clearance</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deptStatus" style="margin-top: 0.6rem; font-size: 0.72rem; color: #4ade80; display:flex; justify-content:space-between;">
+                    <span>Routing: <strong>LIMS / Survey</strong></span>
+                    <code>lims@agric.gov.zw</code>
+                </div>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label id="usernameLabel">National ID / Email / Username</label>
+                    <input type="text" id="email" required placeholder="Farmer National ID or Email" value="farmer@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required placeholder="••••••••" value="password123">
+                </div>
+                <!-- Clean full width sign in button (No install APK button near it) -->
+                <button type="submit" class="btn btn-primary" id="submitBtn" style="width: 100%">Sign In as Farmer</button>
+                <div id="loginError" style="color: var(--danger); margin-top: 1rem; text-align: center;"></div>
+            </form>
+            
+            <hr style="border-color: var(--border); margin: 2rem 0;">
+            <p class="text-center">New Farmer? <a href="#" onclick="toggleRegister()" style="color: var(--accent);">Create Account</a></p>
+        </div>
+        
+        <div class="card fade-in hidden" id="registerCard">
+            <h2 class="text-center">Farmer Registration</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" required>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%">Register & Proceed</button>
+            </form>
+            <p class="text-center mt-2"><a href="#" onclick="toggleRegister()" style="color: var(--text-secondary);">Back to Login</a></p>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        let currentRole = 'farmer';
+        let currentDept = { roleId: 'LIMS_ROLE', name: 'James Mukuru', email: 'lims@agric.gov.zw', label: 'LIMS' };
+
+        function selectRole(role) {
+            currentRole = role;
+            const tabFarmer = document.getElementById('tabFarmer');
+            const tabOfficer = document.getElementById('tabOfficer');
+            const officerSection = document.getElementById('officerDeptSection');
+            const usernameLabel = document.getElementById('usernameLabel');
+            const emailInput = document.getElementById('email');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (role === 'farmer') {
+                tabFarmer.classList.add('active');
+                tabOfficer.classList.remove('active');
+                officerSection.style.display = 'none';
+                usernameLabel.textContent = 'National ID / Email / Username';
+                emailInput.placeholder = 'Farmer National ID or Email';
+                emailInput.value = 'farmer@gmail.com';
+                submitBtn.textContent = 'Sign In as Farmer';
+            } else {
+                tabFarmer.classList.remove('active');
+                tabOfficer.classList.add('active');
+                officerSection.style.display = 'block';
+                usernameLabel.textContent = 'Officer Official Email / Staff ID';
+                emailInput.placeholder = 'e.g. lims@agric.gov.zw';
+                emailInput.value = currentDept.email;
+                submitBtn.textContent = 'Sign In as ' + currentDept.label + ' Officer';
+            }
+        }
+
+        function selectDept(roleId, name, email, label) {
+            currentDept = { roleId, name, email, label };
+            document.querySelectorAll('.dept-option').forEach(el => el.classList.remove('selected'));
+            const clicked = event.currentTarget;
+            if (clicked) clicked.classList.add('selected');
+            document.getElementById('email').value = email;
+            document.getElementById('submitBtn').textContent = 'Sign In as ' + label + ' Officer';
+            document.getElementById('deptStatus').innerHTML = `<span>Routing: <strong>${label}</strong></span><code>${email}</code>`;
+        }
+
+        // Demo login — bypasses API for immediate access
+        function demoLogin(roleId, name, email) {
+            const user = { id: 'demo-' + roleId, name, email, role_id: roleId, department: roleId };
+            localStorage.setItem('jwt', 'demo-jwt-token');
+            localStorage.setItem('user', JSON.stringify(user));
+
+            if (roleId === 'FARMER_ROLE') {
+                window.location.href = 'farmer.html';
+            } else if (roleId === 'ACCOUNTS_ROLE') {
+                localStorage.setItem('admin_user', JSON.stringify(user));
+                window.location.href = 'admin.html?section=accounts';
+            } else {
+                localStorage.setItem('admin_user', JSON.stringify(user));
+                window.location.href = 'admin.html';
+            }
+        }
+
+        // Standard form login (uses API when backend is running)
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Authenticating...';
+            document.getElementById('loginError').textContent = '';
+            
+            try {
+                const res = await apiCall('auth/login.php', 'POST', {
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
+                });
+                localStorage.setItem('jwt', res.jwt);
+                localStorage.setItem('user', JSON.stringify(res.user));
+                
+                if (res.user.role_id === 'FARMER_ROLE') {
+                    window.location.href = 'farmer.html';
+                } else {
+                    localStorage.setItem('admin_user', JSON.stringify(res.user));
+                    window.location.href = 'admin.html';
+                }
+            } catch (err) {
+                document.getElementById('loginError').textContent = err.message || 'Use the Quick Demo Login buttons below for instant access.';
+                btn.textContent = originalText;
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await apiCall('auth/register.php', 'POST', {
+                    name: document.getElementById('regName').value,
+                    email: document.getElementById('regEmail').value,
+                    password: document.getElementById('regPassword').value,
+                    role_id: 'FARMER_ROLE'
+                });
+                alert('Registration successful! Please sign in.');
+                toggleRegister();
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        function toggleRegister() {
+            document.getElementById('loginForm').parentElement.classList.toggle('hidden');
+            document.getElementById('registerCard').classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

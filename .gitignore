@@ -1,0 +1,28 @@
+# Node & Python virtual environments
+node_modules/
+onlineportal/onlineapplication/frontend/node_modules/
+.venv/
+venv/
+onlineportal/.venv/
+onlineportal/onlineapplication/.venv/
+onlineportal/onlineapplication/venv/
+__pycache__/
+*.py[cod]
+
+# Android Gradle build caches (keep source & signed APKs)
+mobile_application/android/.gradle/
+mobile_application/android/build/
+mobile_application/android/app/build/
+mobile_application/android/capacitor-cordova-android-plugins/build/
+onlineportal/onlineapplication/frontend/android/.gradle/
+onlineportal/onlineapplication/frontend/android/build/
+onlineportal/onlineapplication/frontend/android/app/build/
+onlineportal/onlineapplication/frontend/android/capacitor-cordova-android-plugins/build/
+local.properties
+
+# Local runtime state & temporary Office lock files
+data/store.json
+~$*
+*.log
+.env
+onlineportal/onlineapplication/.env

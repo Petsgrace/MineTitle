@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTDAS — System Architecture Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #1a1a2e;
+            --accent: #6C5CE7;
+            --accent-light: #a29bfe;
+            --surface: #ffffff;
+            --text: #2d3436;
+            --text-muted: #636e72;
+            --border: #dfe6e9;
+            --green: #00b894;
+            --orange: #e17055;
+            --yellow: #fdcb6e;
+            --blue: #4a90d9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: var(--text);
+            background: var(--surface);
+            line-height: 1.6;
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 50px;
+        }
+
+        /* Cover Section */
+        .cover {
+            text-align: center;
+            padding: 60px 40px;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 16px;
+            color: white;
+            page-break-after: always;
+        }
+
+        .cover .badge {
+            display: inline-block;
+            background: rgba(108, 92, 231, 0.3);
+            border: 1px solid rgba(108, 92, 231, 0.5);
+            padding: 6px 20px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent-light);
+            margin-bottom: 24px;
+        }
+
+        .cover h1 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .cover .subtitle {
+            font-size: 18px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 300;
+            margin-bottom: 32px;
+        }
+
+        .cover .meta {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .cover .meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cover .crest {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* Section Headers */
+        .section {
+            margin-bottom: 48px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .section-number {
+            background: var(--accent);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .section-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .section-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+            max-width: 800px;
+        }
+
+        /* Mermaid Diagram Container */
+        .diagram-container {
+            background: #fafbfc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px 20px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+
+        .diagram-container .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+
+        .diagram-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Legend Table */
+        .legend-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .legend-table thead th {
+            background: var(--primary);
+            color: white;
+            padding: 14px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .legend-table tbody td {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .legend-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .legend-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .color-dot {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        /* Data Flows List */
+        .flow-list {
+            list-style: none;
+            counter-reset: flow;
+        }
+
+        .flow-list li {
+            counter-increment: flow;
+            padding: 16px 20px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent);
+            font-size: 14px;
+            position: relative;
+            padding-left: 52px;
+        }
+
+        .flow-list li::before {
+            content: counter(flow);
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .flow-list li strong {
+            color: var(--primary);
+        }
+
+        /* Page breaks for PDF */
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* Print styles */
+        @media print {
+            body { background: white; }
+            .page { padding: 20px 30px; }
+            .cover { padding: 40px 30px; margin-bottom: 0; }
+            .diagram-container { break-inside: avoid; }
+            .section { break-inside: avoid; }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- Cover -->
+        <div class="cover">
+            <div class="crest">🏛️</div>
+            <div class="badge">System Architecture Document</div>
+            <h1>Online Title Deeds<br>Application System</h1>
+            <p class="subtitle">OTDAS — Technical Architecture &amp; Integration Blueprint</p>
+            <div class="meta">
+                <span>📅 April 2026</span>
+                <span>📄 Version 1.0</span>
+                <span>🔒 Confidential</span>
+            </div>
+        </div>
+
+        <!-- Section 1: High-Level Architecture -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <h2>High-Level System Architecture</h2>
+            </div>
+            <p class="section-desc">
+                Overview of all system layers — from user-facing portals through the core processing engine to internal databases and external government/financial API integrations.
+            </p>
+            <div class="diagram-container">
+                <div class="mermaid">
+graph TB
+    subgraph USERS["👥 Users"]
+        FARMER["🧑‍🌾 Farmer\n(Web Portal)"]
+        LANDS_ADMIN["🏛️ Lands Admin"]
+        SG_ADMIN["📐 SG Admin"]
+        ZLC_ADMIN["⚖️ ZLC Admin"]
+    end
+
+    subgraph FRONTEND["🖥️ Frontend Layer"]
+        FP["Farmer Portal\nRegistration · Application\nStatus Tracking · Payments"]
+        LP["Lands Portal\nCase Management\nTenure Verification"]
+        SGP["SG Portal\nSpatial & Boundary\nVerification"]
+        ZLCP["ZLC Portal\nDispute Adjudication\nLegal Conflicts"]
+    end
+
+    subgraph CORE["⚙️ OTDAS Core Engine"]
+        AUTH["Authentication\n& Authorization"]
+        REG["Registration\nModule"]
+        BIO["Bio-Data\nVerification"]
+        LAND_VER["Land & Status\nVerification"]
+        VAL["Valuation\nEngine"]
+        PAY["Payment &\nDiscount Logic"]
+        NOTIF["Notification Service\n📧 Email · 📱 SMS"]
+        MSG["Inter-Agency\nMessaging & @Mentions"]
+        AUDIT["Audit Trail\n🔒 Immutable Log"]
+    end
+
+    subgraph INTERNAL_DB["🗄️ Internal Databases"]
+        LANDS_DB[("Lands\nDatabase")]
+        VAL_TABLE[("Valuation\nTable")]
+        WAR_VET_DB[("War Veterans\nDatabase")]
+        PSC_DB[("Public Service\nCommission DB")]
+        USER_DB[("User & Application\nDatabase")]
+        AUDIT_DB[("Audit Log\nDatabase")]
+    end
+
+    subgraph EXTERNAL["🌐 External API Integrations"]
+        RG_API["Registrar General API\nDOB · Marital Status\nGender · Life Status"]
+        SG_API["Surveyor General API\nProperty Description\nExtent · District"]
+        ZLC_API["ZLC API\nDisputes\nDouble Allocations"]
+        DOKUMA_API["Dokuma API\nBank List · Mortgage\nAgreement Hosting"]
+    end
+
+    FARMER --> FP
+    LANDS_ADMIN --> LP
+    SG_ADMIN --> SGP
+    ZLC_ADMIN --> ZLCP
+
+    FP --> AUTH
+    LP --> AUTH
+    SGP --> AUTH
+    ZLCP --> AUTH
+
+    AUTH --> REG
+    AUTH --> LAND_VER
+    AUTH --> VAL
+    AUTH --> MSG
+
+    REG --> BIO
+    BIO --> LAND_VER
+    LAND_VER --> VAL
+    VAL --> PAY
+
+    REG --> USER_DB
+    LAND_VER --> LANDS_DB
+    LAND_VER --> WAR_VET_DB
+    LAND_VER --> PSC_DB
+    VAL --> VAL_TABLE
+    AUDIT --> AUDIT_DB
+    MSG --> AUDIT_DB
+
+    BIO --> RG_API
+    LAND_VER --> SG_API
+    LAND_VER --> ZLC_API
+    PAY --> DOKUMA_API
+
+    LAND_VER --> NOTIF
+    PAY --> NOTIF
+
+    classDef userStyle fill:#4A90D9,stroke:#2C5F8A,color:#fff,stroke-width:2px
+    classDef frontendStyle fill:#6C5CE7,stroke:#4834A0,color:#fff,stroke-width:2px
+    classDef coreStyle fill:#00B894,stroke:#00856A,color:#fff,stroke-width:2px
+    classDef dbStyle fill:#FDCB6E,stroke:#C89A2C,color:#333,stroke-width:2px
+    classDef externalStyle fill:#E17055,stroke:#B24D3A,color:#fff,stroke-width:2px
+
+    class FARMER,LANDS_ADMIN,SG_ADMIN,ZLC_ADMIN userStyle
+    class FP,LP,SGP,ZLCP frontendStyle
+    class AUTH,REG,BIO,LAND_VER,VAL,PAY,NOTIF,MSG,AUDIT coreStyle
+    class LANDS_DB,VAL_TABLE,WAR_VET_DB,PSC_DB,USER_DB,AUDIT_DB dbStyle
+    class RG_API,SG_API,ZLC_API,DOKUMA_API externalStyle
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Processing Pipeline -->
+        <div class="section page-break">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <h2>Application Processing Pipeline</h2>
+            </div>
+            <p class="section-desc">
+                End-to-end flowchart tracing a farmer's journey from registration through bio-data verification, land checks, survey/dispute gates, valuation, payment, and final title deed issuance.
+            </p>
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart TD
+    START(["🧑‍🌾 Farmer Begins Application"]) --> REG["FR-1: Register Account\nNational ID · Phone · Name"]
+    REG --> BIO_CHECK{"FR-2: Query\nRegistrar General API"}
+    BIO_CHECK -->|"Verified"| BIO_OK["Bio-Data Populated\nDOB · Marital Status\nGender · Life Status"]
+    BIO_CHECK -->|"Not Found"| BIO_FAIL["❌ Registration Rejected"]
+    BIO_OK --> PROFILE["FR-3: Profile Completion\nResidential Address · Title"]
+
+    PROFILE --> LANDS_QUERY{"FR-4: Search\nLands Database"}
+    LANDS_QUERY -->|"Record Found"| FARM_DATA["Farm Data Retrieved"]
+    LANDS_QUERY -->|"No Record"| MANUAL["FR-4.1: Manual Upload\nOffer Letters · Permits\n99-Year Leases"]
+    MANUAL --> FARM_DATA
+
+    FARM_DATA --> SG_QUERY{"FR-5: Query\nSurveyor General API"}
+    SG_QUERY -->|"Surveyed"| SG_DATA["Property Description\nExtent · District"]
+    SG_QUERY -->|"Not Surveyed"| PAUSE_SG["⏸️ Application Paused\nFarmer notified to\narrange survey + payment"]
+    PAUSE_SG -->|"Survey Completed"| SG_DATA
+
+    SG_DATA --> DISPUTE{"FR-6: Dispute &\nOwnership Check"}
+    DISPUTE -->|"Clear"| CLEAR["✅ No Disputes"]
+    DISPUTE -->|"Dispute Found"| PAUSE_DISP["⏸️ Application Paused\n📧 Farmer Notified\nAwaiting Resolution"]
+    PAUSE_DISP -->|"Resolved"| CLEAR
+
+    CLEAR --> SPECIAL{"FR-7: Special Status\nVerification"}
+    SPECIAL --> WAR_VET{"War Veteran?"}
+    SPECIAL --> PSC_CHECK{"Civil Servant?"}
+    WAR_VET -->|"Yes"| DISC_WV["15% Discount +\n$10/first 6ha"]
+    WAR_VET -->|"No"| NO_WV["Standard Rate"]
+    PSC_CHECK -->|"≥20 years"| DISC_PSC5["5% Discount"]
+    PSC_CHECK -->|"≥10 years"| DISC_PSC25["2.5% Discount"]
+    PSC_CHECK -->|"Less than 10 years"| NO_PSC["No PSC Discount"]
+
+    DISC_WV --> VALUATION
+    NO_WV --> VALUATION
+    DISC_PSC5 --> VALUATION
+    DISC_PSC25 --> VALUATION
+    NO_PSC --> VALUATION
+
+    VALUATION{"FR-8: Valuation\nTable Lookup"}
+    VALUATION -->|"Found"| PRICE["Purchase Price Set"]
+    VALUATION -->|"Not Found"| MANUAL_VAL["FR-8.1: Land Attributes\nDistance · Arable Land\nWater Source"]
+    MANUAL_VAL --> CALC["FR-8.2: Automated\nValuation Calculation"]
+    CALC --> PRICE
+
+    PRICE --> PAYMENT{"FR-9: Payment Method"}
+    PAYMENT -->|"Cash"| CASH["💵 15% Immediate Discount"]
+    PAYMENT -->|"Mortgage"| MORTGAGE["🏦 Select Bank\nfrom Dokuma API"]
+    MORTGAGE --> DOKUMA["Send to Dokuma API\nBio-Data · Farm Details\nBank Selection"]
+    DOKUMA --> BANK_MSG["Receive Bank\nResponse"]
+
+    CASH --> REVIEW["📋 Admin Review Pipeline"]
+    BANK_MSG --> REVIEW
+
+    REVIEW --> LANDS_R["Lands Portal Review"]
+    LANDS_R --> SG_R["SG Portal Review"]
+    SG_R --> ZLC_R["ZLC Portal Review"]
+    ZLC_R --> APPROVED(["✅ Title Deed Issued"])
+
+    classDef startEnd fill:#6C5CE7,stroke:#4834A0,color:#fff,stroke-width:2px
+    classDef process fill:#00B894,stroke:#00856A,color:#fff,stroke-width:1px
+    classDef decision fill:#FDCB6E,stroke:#C89A2C,color:#333,stroke-width:2px
+    classDef pause fill:#E17055,stroke:#B24D3A,color:#fff,stroke-width:2px
+    classDef discount fill:#A29BFE,stroke:#6C5CE7,color:#333,stroke-width:1px
+
+    class START,APPROVED startEnd
+    class REG,BIO_OK,PROFILE,FARM_DATA,SG_DATA,CLEAR,PRICE,CASH,MORTGAGE,DOKUMA,BANK_MSG,REVIEW,LANDS_R,SG_R,ZLC_R,MANUAL,MANUAL_VAL,CALC process
+    class BIO_CHECK,LANDS_QUERY,SG_QUERY,DISPUTE,SPECIAL,WAR_VET,PSC_CHECK,VALUATION,PAYMENT decision
+    class PAUSE_SG,PAUSE_DISP,BIO_FAIL pause
+    class DISC_WV,NO_WV,DISC_PSC5,DISC_PSC25,NO_PSC discount
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: API Integration -->
+        <div class="section page-break">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <h2>External API Integration Map</h2>
+            </div>
+            <p class="section-desc">
+                Detailed view of all integration points showing the exact inputs and outputs for each external government and financial API consumed by OTDAS.
+            </p>
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart LR
+    subgraph OTDAS["OTDAS System"]
+        BIO_MOD["Bio-Data Module"]
+        LAND_MOD["Land Verification Module"]
+        PAY_MOD["Payment Module"]
+    end
+
+    subgraph GOV_APIS["Government APIs"]
+        RG["🏛️ Registrar General\n─────────────────\nIN: National ID\nOUT: DOB, Marital Status,\nGender, Life Status"]
+        SG["📐 Surveyor General\n─────────────────\nIN: Property Reference\nOUT: Farm Name, Size,\nDistrict, Survey Status"]
+        ZLC["⚖️ ZLC Database\n─────────────────\nIN: National ID / Property\nOUT: Disputes, Double\nAllocations, Ownership"]
+    end
+
+    subgraph FIN_API["Financial APIs"]
+        DOK["🏦 Dokuma API\n─────────────────\nIN: National ID, Property,\nFarm Details, Bank Selection\nOUT: Bank List, Mortgage\nResponse, Agreement URLs"]
+    end
+
+    subgraph INT_DB["Internal Databases"]
+        WV["🎖️ War Veterans DB\n─────────────────\nIN: National ID\nOUT: Veteran Status,\nEligibility"]
+        PSC["📋 PSC Database\n─────────────────\nIN: National ID\nOUT: Service Years,\nDiscount Tier"]
+    end
+
+    BIO_MOD -->|"Verify Identity"| RG
+    LAND_MOD -->|"Survey Check"| SG
+    LAND_MOD -->|"Dispute Check"| ZLC
+    LAND_MOD -->|"Veteran Check"| WV
+    LAND_MOD -->|"Service Check"| PSC
+    PAY_MOD -->|"Mortgage Request"| DOK
+
+    classDef otdas fill:#00B894,stroke:#00856A,color:#fff,stroke-width:2px
+    classDef gov fill:#4A90D9,stroke:#2C5F8A,color:#fff,stroke-width:2px
+    classDef fin fill:#E17055,stroke:#B24D3A,color:#fff,stroke-width:2px
+    classDef internal fill:#FDCB6E,stroke:#C89A2C,color:#333,stroke-width:2px
+
+    class BIO_MOD,LAND_MOD,PAY_MOD otdas
+    class RG,SG,ZLC gov
+    class DOK fin
+    class WV,PSC internal
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Legend & Data Flows -->
+        <div class="section page-break">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <h2>Component Legend</h2>
+            </div>
+            <table class="legend-table">
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Color</th>
+                        <th>Components</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Users</strong></td>
+                        <td><span class="color-dot" style="background:#4A90D9;"></span> Blue</td>
+                        <td>Farmer, Lands Admin, SG Admin, ZLC Admin</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Frontend Portals</strong></td>
+                        <td><span class="color-dot" style="background:#6C5CE7;"></span> Purple</td>
+                        <td>Farmer Portal, Lands Portal, SG Portal, ZLC Portal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Core Engine</strong></td>
+                        <td><span class="color-dot" style="background:#00B894;"></span> Green</td>
+                        <td>Auth, Registration, Bio-Data, Land Verification, Valuation, Payments, Notifications, Messaging, Audit</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Internal Databases</strong></td>
+                        <td><span class="color-dot" style="background:#FDCB6E;"></span> Yellow</td>
+                        <td>Lands DB, Valuation Table, War Veterans DB, PSC DB, User DB, Audit Log</td>
+                    </tr>
+                    <tr>
+                        <td><strong>External APIs</strong></td>
+                        <td><span class="color-dot" style="background:#E17055;"></span> Orange</td>
+                        <td>Registrar General, Surveyor General, ZLC, Dokuma</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 5: Key Data Flows -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-number">5</div>
+                <h2>Key Data Flows</h2>
+            </div>
+            <ol class="flow-list">
+                <li><strong>Registration → Verification:</strong> National ID flows from farmer registration through Registrar General API for bio-data auto-population (DOB, Marital Status, Gender, Life Status).</li>
+                <li><strong>Land Verification Pipeline:</strong> Sequential checks through Lands DB → Surveyor General → ZLC, with pause/resume capability at each gate for unresolved issues.</li>
+                <li><strong>Valuation Pipeline:</strong> Lookup-first approach using predefined valuation tables, with automated calculation fallback based on land attributes and Natural Region.</li>
+                <li><strong>Payment Branching:</strong> Cash path applies immediate 15% discount; mortgage path routes through Dokuma API for bank selection and agreement processing.</li>
+                <li><strong>Cross-Portal Collaboration:</strong> Inter-agency messaging with @mentions spans all admin portals, with every action logged to the immutable audit trail.</li>
+                <li><strong>Dokuma Outbound:</strong> OTDAS sends National ID, property description, and secure URLs for Agreement of Sale and Declaration by Purchaser to the Dokuma API.</li>
+            </ol>
+        </div>
+
+        <div class="footer">
+            <p>OTDAS System Architecture Document · Ministry of Lands · Confidential · April 2026</p>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20
+            }
+        });
+    </script>
+</body>
+</html>

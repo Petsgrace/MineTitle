@@ -1,0 +1,16 @@
+{
+  "appId": "zw.gov.lands.titledeeds",
+  "appName": "Unified Mobile Title Deeds",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#1a5c32"
+    }
+  }
+}
+

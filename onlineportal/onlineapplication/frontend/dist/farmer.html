@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Portal | Title Deeds</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <img src="logo.png" alt="Republic of Zimbabwe Coat of Arms" style="height:36px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(16,185,129,0.4));">
+            <span>Title Deeds System</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="farmer.html" class="nav-link active">Apply</a>
+            <a href="track.html" class="nav-link">Track</a>
+            <a href="gis.html" class="nav-link">GIS</a>
+            <a href="index.html" class="nav-link">Portal</a>
+            <a href="officer-login.html" class="nav-link nav-btn-officer">🛡️ Officer</a>
+            <span id="userName" style="color: var(--accent); margin-left: 0.5rem; font-size: 0.8rem;"></span>
+            <button class="btn btn-outline" style="padding: 0.35rem 0.8rem; font-size: 0.78rem;" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container fade-in">
+        <div class="grid grid-2">
+            <!-- Submit App Card -->
+            <div class="card">
+                <h2>Start New Application</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Digitize your landholdings securely without visiting the One-Stop Centre.</p>
+                
+                <form id="applyForm">
+                    <div class="form-group">
+                        <label>Tenure Document Type</label>
+                        <select required>
+                            <option value="">Select Document...</option>
+                            <option value="A2">A2 Permit</option>
+                            <option value="99">99-Year Lease</option>
+                            <option value="Offer">Offer Letter</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Document (PDF)</label>
+                        <input type="file" required style="background: rgba(255,255,255,0.05); cursor: pointer">
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width: 100%">Submit Application</button>
+                </form>
+            </div>
+            
+            <!-- App Status Card -->
+            <div class="card">
+                <h2>My Applications</h2>
+                <div id="myApps">
+                    <p class="text-center" style="color: var(--text-secondary);">Loading applications...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        const user = checkAuth();
+        document.getElementById('userName').textContent = user.name;
+        
+        document.getElementById('applyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await apiCall('applications/create.php', 'POST', { document_type: "demo" });
+                alert('Application Submitted! Tracking status has been updated.');
+                loadMyApps();
+            } catch(e) {
+                alert(e.message);
+            }
+        });
+        
+        async function loadMyApps() {
+            try {
+                const res = await apiCall('applications/list.php');
+                const container = document.getElementById('myApps');
+                container.innerHTML = '';
+                
+                if(res.data.length === 0) {
+                    container.innerHTML = '<p class="text-center" style="margin-top:2rem">No applications found. Submit one to track it here!</p>';
+                    return;
+                }
+                
+                res.data.forEach(app => {
+                    let text = "Your document is under review by Land Administration.";
+                    if(app.current_stage === 'VERIFIED') text = "Awaiting Zimbabwe Land Commission Dispute Clearance.";
+                    if(app.current_stage === 'ZLC_CLEARED') text = "Awaiting Surveyor General Mapping.";
+                    if(app.current_stage === 'SURVEYED') text = "Ready for payment via Finance.";
+                    if(app.current_stage === 'PAID') text = "Deed processing in final conveyancing.";
+                    if(app.current_stage === 'DEED_ISSUED') text = "Complete. Your Title Deed is ready.";
+                    
+                    container.innerHTML += `
+                        <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid var(--accent)">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem">
+                                <strong>App ID: ${app.id.substring(0,8)}</strong>
+                                ${getStageBadge(app.current_stage)}
+                            </div>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary)">${text}</p>
+                        </div>
+                    `;
+                });
+            } catch(e) {
+                console.error(e);
+            }
+        }
+        
+        loadMyApps();
+    </script>
+</body>
+</html>
