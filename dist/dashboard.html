@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard | Title Deeds</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">One-Stop Centre <span id="deptName" style="color: var(--text-secondary); font-size: 1rem;"></span></div>
+        <div class="nav-links">
+            <span id="userName" style="color: var(--accent)"></span>
+            <button class="btn btn-outline" style="padding: 0.4rem 1rem" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container fade-in">
+        <div class="card">
+            <h2>Applications Queue</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Applications securely requiring your department's specific authorization.</p>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Application ID</th>
+                            <th>Applicant</th>
+                            <th>Current Stage</th>
+                            <th>Submitted Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queueData">
+                        <tr><td colspan="5" class="text-center">Loading processing queue...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        const user = checkAuth();
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('deptName').textContent = `| ${user.role_id.replace('_ROLE', '')}`;
+        
+        async function loadQueue() {
+            try {
+                const res = await apiCall('applications/list.php');
+                const tbody = document.getElementById('queueData');
+                tbody.innerHTML = '';
+                
+                if (res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding: 2rem">Queue is clear! Great job team.</td></tr>';
+                    return;
+                }
+                
+                res.data.forEach(app => {
+                    let actionBtn = '-';
+                    if(user.role_id === 'LANDS_ACQ_ROLE') {
+                        actionBtn = `<button class="btn btn-primary" onclick="updateStage('${app.id}', 'VERIFIED')">Verify Tenure</button>`;
+                    } else if (user.role_id === 'ZLC_ROLE') {
+                        actionBtn = `<button class="btn btn-primary" onclick="updateStage('${app.id}', 'ZLC_CLEARED')">Clear Disputes</button>`;
+                    } else if (user.role_id === 'LIMS_SURVEYOR_ROLE') {
+                         actionBtn = `<button class="btn btn-primary" onclick="updateStage('${app.id}', 'SURVEYED')">Approve Survey</button>`;
+                    } else if (user.role_id === 'FINANCE_ROLE') {
+                         actionBtn = `<button class="btn btn-primary" onclick="updateStage('${app.id}', 'PAID')">Mark Paid</button>`;
+                    } else if (user.role_id === 'ADMIN_ROLE') {
+                         actionBtn = `<button class="btn btn-success" onclick="updateStage('${app.id}', 'DEED_ISSUED')">Issue Deed</button>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><code>${app.id.substring(0, 12)}...</code></td>
+                            <td>${app.applicant_name}</td>
+                            <td>${getStageBadge(app.current_stage)}</td>
+                            <td>${new Date(app.created_at).toLocaleDateString()}</td>
+                            <td>${actionBtn}</td>
+                        </tr>
+                    `;
+                });
+            } catch(e) {
+                console.error(e);
+            }
+        }
+        
+        async function updateStage(id, nextStage) {
+            if(!confirm(`Transition this application to ${nextStage}?`)) return;
+            try {
+                await apiCall(`applications/update_status.php?id=${id}`, 'PATCH', { new_stage: nextStage });
+                alert('Successfully progressed!');
+                loadQueue();
+            } catch(e) {
+                alert(e.message);
+            }
+        }
+        
+        loadQueue();
+    </script>
+</body>
+</html>

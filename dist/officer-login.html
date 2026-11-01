@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Officer Channel Login | Title Deeds One Stop Centre</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .login-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 2rem; margin-top: 2rem; }
+        @media (max-width: 900px) { .login-grid { grid-template-columns: 1fr; } }
+        .dept-card {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 1rem; background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+            transition: all 0.2s ease; margin-bottom: 0.5rem;
+        }
+        .dept-card:hover { border-color: var(--accent); background: rgba(47,129,247,0.08); transform: translateX(3px); }
+        .dept-card.selected { border-color: #f59e0b; background: rgba(245,158,11,0.12); }
+        .dept-icon { font-size: 1.3rem; margin-right: 0.75rem; flex-shrink: 0; }
+        .dept-info { flex: 1; }
+        .dept-name { font-weight: 600; font-size: 0.9rem; color: #fff; }
+        .dept-officer { font-size: 0.75rem; color: var(--text-secondary); }
+        .dept-tag { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase; background: rgba(255,255,255,0.06); }
+        .admin-card { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.04); }
+        .admin-card:hover { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+    </style>
+</head>
+<body>
+    <!-- ===== PUBLIC / MAIN NAVBAR ===== -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <img src="logo.png" alt="Republic of Zimbabwe Coat of Arms" style="height:36px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(16,185,129,0.4));">
+            <span>Title Deeds System</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="farmer.html" class="nav-link">Apply</a>
+            <a href="track.html" class="nav-link">Track</a>
+            <a href="gis.html" class="nav-link">GIS</a>
+            <a href="index.html" class="nav-link">Portal</a>
+            <a href="officer-login.html" class="nav-link nav-btn-officer active">🛡️ Officer</a>
+        </div>
+    </nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="container" style="max-width: 1080px; margin-top: 1.5rem;">
+        <div class="card fade-in" style="padding: 2.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+                <div style="display:flex; align-items:center; gap:1.25rem;">
+                    <img src="logo.png" alt="Coat of Arms" style="height:72px;width:auto;object-fit:contain;filter:drop-shadow(0 3px 8px rgba(16,185,129,0.45));flex-shrink:0;">
+                    <div>
+                        <div style="display:inline-flex; align-items:center; gap:0.5rem; background:rgba(251,191,36,0.15); color:var(--gold); border:1px solid rgba(251,191,36,0.35); border-radius:20px; padding:0.25rem 0.75rem; font-size:0.75rem; font-weight:800; margin-bottom:0.4rem;">
+                            GOVERNMENT OF ZIMBABWE · ONE STOP CENTRE
+                        </div>
+                        <h1 style="font-size: 1.85rem; margin-bottom: 0.3rem;">Officer Channel Authentication</h1>
+                        <p style="color: var(--text-secondary); font-size: 0.88rem; max-width: 620px; margin:0;">
+                            Sign in with your department credentials to access your specialized ministerial channel workspace under the Land Commission Act [Chapter 20:29].
+                        </p>
+                    </div>
+                </div>
+                <div style="text-align:right">
+                    <span class="badge badge-cleared" style="font-size:0.75rem">● Enterprise Core Active</span>
+                    <div style="font-size:0.72rem; color:var(--text-secondary); margin-top:0.3rem">Land Commission Act Chapter 20:29</div>
+                </div>
+            </div>
+
+            <div class="login-grid">
+                <!-- Left Column: Login Credentials Form -->
+                <div>
+                    <h2 style="font-size: 1.15rem; margin-bottom: 1rem; display:flex; align-items:center; gap:0.5rem">
+                        <span>🔐</span> Enter Credentials
+                    </h2>
+                    
+                    <form id="officerLoginForm">
+                        <div class="form-group">
+                            <label>Officer Email / Government ID</label>
+                            <input type="email" id="officerEmail" required placeholder="officer@agric.gov.zw" value="lims@agric.gov.zw">
+                        </div>
+                        <div class="form-group">
+                            <label>Passphrase</label>
+                            <input type="password" id="officerPassword" required placeholder="••••••••••••" value="password123">
+                        </div>
+
+                        <div id="selectedChannelAlert" style="margin-bottom:1.25rem; padding:0.75rem 1rem; background:rgba(47,129,247,0.1); border:1px solid rgba(47,129,247,0.3); border-radius:8px; font-size:0.8rem; display:none">
+                            <div style="font-weight:700; color:#79c0ff" id="selectedChannelTitle">Selected: LIMS Channel</div>
+                            <div style="color:var(--text-secondary); margin-top:0.2rem" id="selectedChannelDesc">Validates offer letters and parent farm gazette entries</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%; font-weight:700; display:flex; align-items:center; justify-content:center; gap:0.5rem" id="loginBtn">
+                            <span>Sign In to Channel</span>
+                            <span>➔</span>
+                        </button>
+                        
+                        <div id="loginFeedback" style="color: var(--danger); margin-top: 1rem; text-align: center; font-size: 0.82rem;"></div>
+                    </form>
+
+                    <div style="margin-top: 1.25rem; padding: 0.85rem 1rem; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
+                        <div>
+                            <div style="font-size: 0.82rem; font-weight: 700; color: #4ade80;">📱 Field Cadastral Survey APK</div>
+                            <div style="font-size: 0.73rem; color: var(--text-secondary); margin-top: 0.15rem;">Title Deeds System Mobile (v1.0)</div>
+                        </div>
+                        <a href="TitleDeeds.apk" download="TitleDeeds.apk" class="btn" style="font-size: 0.75rem; padding: 0.45rem 0.85rem; background: #22c55e; color: #0f172a; font-weight: 700; border: none; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <span>Download APK</span>
+                            <span>⬇️</span>
+                        </a>
+                    </div>
+
+                    <div style="margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="font-size: 0.8rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem;">🛡️ Duty & Role-Based Access</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">
+                            Credentials automatically identify your clearance level, assigned department, and specific statutory endorsement permissions configured by the System Administrator.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Quick Demo Credentials for Every Department -->
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+                        <h2 style="font-size: 1.15rem; margin:0">⚡ Quick Department Credentials</h2>
+                        <span style="font-size:0.72rem; color:var(--text-secondary)">Click to autofill & authenticate</span>
+                    </div>
+
+                    <!-- 1. LIMS -->
+                    <div class="dept-card" onclick="selectOfficer('LIMS_ROLE', 'lims', 'James Mukuru', 'lims@agric.gov.zw', 'Form LIMS-01 · Offer Letters', '#8b5cf6', '🗺️')">
+                        <div class="dept-icon">🗺️</div>
+                        <div class="dept-info">
+                            <div class="dept-name">LIMS / Lands Information</div>
+                            <div class="dept-officer">James Mukuru (lims@agric.gov.zw)</div>
+                        </div>
+                        <span class="dept-tag" style="color:#8b5cf6">Form LIMS-01</span>
+                    </div>
+
+                    <!-- 2. Accounts -->
+                    <div class="dept-card" onclick="selectOfficer('ACCOUNTS_ROLE', 'accounts', 'Tatenda Ndlovu', 'accounts@agric.gov.zw', 'Form ACC-04 · $10 Fee Clearance', '#f59e0b', '💰')">
+                        <div class="dept-icon">💰</div>
+                        <div class="dept-info">
+                            <div class="dept-name">Finance & Accounts</div>
+                            <div class="dept-officer">Tatenda Ndlovu (accounts@agric.gov.zw)</div>
+                        </div>
+                        <span class="dept-tag" style="color:#f59e0b">Form ACC-04</span>
+                    </div>
+
+                    <!-- 3. Estates -->
+                    <div class="dept-card" onclick="selectOfficer('ESTATES_ROLE', 'estates', 'Sarah Chisvo', 'estates@agric.gov.zw', 'Form EST-02 · Succession Audit', '#ec4899', '🏠')">
+                        <div class="dept-icon">🏠</div>
+                        <div class="dept-info">
+                            <div class="dept-name">Estates & Succession</div>
+                            <div class="dept-officer">Sarah Chisvo (estates@agric.gov.zw)</div>
+                        </div>
+                        <span class="dept-tag" style="color:#ec4899">Form EST-02</span>
+                    </div>
+
+                    <!-- 4. ZLC -->
+                    <div class="dept-card" onclick="selectOfficer('ZLC_ROLE', 'zlc', 'Rutendo Pfende', 'zlc@agric.gov.zw', 'Form ZLC-03 · Land Disputes', '#14b8a6', '⚖️')">
+                        <div class="dept-icon">⚖️</div>
+                        <div class="dept-info">
+                            <div class="dept-name">Zimbabwe Land Commission</div>
+                            <div class="dept-officer">Rutendo Pfende (zlc@agric.gov.zw)</div>
+                        </div>
+                        <span class="dept-tag" style="color:#14b8a6">Form ZLC-03</span>
+                    </div>
+
+                    <!-- 5. Surveyor General -->
+                    <div class="dept-card" onclick="selectOfficer('SURVEYOR_ROLE', 'surveyor', 'Maxwell Gata', 'surveyor@agric.gov.zw', 'Form SG-05 · Cadastral & GPS', '#06b6d4', '📐')">
+                        <div class="dept-icon">📐</div>
+                        <div class="dept-info">
+                            <div class="dept-name">Surveyor General</div>
+                            <div class="dept-officer">Maxwell Gata (surveyor@agric.gov.zw)</div>
+                        </div>
+                        <span class="dept-tag" style="color:#06b6d4">Form SG-05</span>
+                    </div>
+
+                    <!-- 6. Valuation -->
+                    <div class="dept-card" onclick="selectOfficer('VALUATION_ROLE', 'valuation', 'Linda Shiri', 'valuation@agric.gov.zw', 'Form VAL-06 · Asset Appraisal', '#f97316', '📊')">
+                        <div class="dept-icon">📊</div>
+                        <div class="dept-info">
+                            <div class="dept-name">Valuation Directorate</div>
+                            <div class="dept-officer">Linda Shiri (valuation@agric.gov.zw)</div>
+                        </div>
+                        <span class="dept-tag" style="color:#f97316">Form VAL-06</span>
+                    </div>
+
+                    <!-- 7. Director -->
+                    <div class="dept-card" onclick="selectOfficer('DIRECTOR_ROLE', 'director', 'Kennedy Moyo', 'director@agric.gov.zw', 'Form ED-07 · Title Grant Warrant', '#6366f1', '👔')">
+                        <div class="dept-icon">👔</div>
+                        <div class="dept-info">
+                            <div class="dept-name">Executive Director</div>
+                            <div class="dept-officer">Kennedy Moyo (director@agric.gov.zw)</div>
+                        </div>
+                        <span class="dept-tag" style="color:#6366f1">Form ED-07</span>
+                    </div>
+
+                    <!-- 8. Deeds Registry -->
+                    <div class="dept-card" onclick="selectOfficer('DEEDS_ROLE', 'deeds', 'Patience Gweru', 'deeds@agric.gov.zw', 'Form DR-08 · Great Seal Title', '#10b981', '📜')">
+                        <div class="dept-icon">📜</div>
+                        <div class="dept-info">
+                            <div class="dept-name">Deeds Registry</div>
+                            <div class="dept-officer">Patience Gweru (deeds@agric.gov.zw)</div>
+                        </div>
+                        <span class="dept-tag" style="color:#10b981">Form DR-08</span>
+                    </div>
+
+                    <!-- 9. System Administrator (Privilege & Duty Assignment) -->
+                    <div class="dept-card admin-card" onclick="selectOfficer('SYSTEM_ADMIN_ROLE', 'users', 'Admin Superuser', 'admin@agric.gov.zw', 'Duty & Privilege Assignment Console', '#ef4444', '⚙️')">
+                        <div class="dept-icon">⚙️</div>
+                        <div class="dept-info">
+                            <div class="dept-name" style="color:#f87171">System Administrator</div>
+                            <div class="dept-officer">Admin Superuser (admin@agric.gov.zw) — Duty & Privilege Console</div>
+                        </div>
+                        <span class="dept-tag" style="background:rgba(239,68,68,0.2);color:#ef4444">Assign Duties</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== LOGIC ===== -->
+    <script>
+        const CREDENTIAL_MAP = {
+            'lims@agric.gov.zw':       { role_id: 'LIMS_ROLE',         section: 'lims',      name: 'James Mukuru',    dept: 'LIMS / Lands Information' },
+            'accounts@agric.gov.zw':   { role_id: 'ACCOUNTS_ROLE',     section: 'accounts',  name: 'Tatenda Ndlovu',  dept: 'Finance & Accounts Directorate' },
+            'estates@agric.gov.zw':    { role_id: 'ESTATES_ROLE',      section: 'estates',   name: 'Sarah Chisvo',    dept: 'Estates & Succession Division' },
+            'zlc@agric.gov.zw':        { role_id: 'ZLC_ROLE',          section: 'zlc',       name: 'Rutendo Pfende',  dept: 'Zimbabwe Land Commission' },
+            'surveyor@agric.gov.zw':   { role_id: 'SURVEYOR_ROLE',     section: 'surveyor',  name: 'Maxwell Gata',    dept: 'Surveyor General Directorate' },
+            'valuation@agric.gov.zw':  { role_id: 'VALUATION_ROLE',    section: 'valuation', name: 'Linda Shiri',     dept: 'Valuation Directorate' },
+            'director@agric.gov.zw':   { role_id: 'DIRECTOR_ROLE',     section: 'director',  name: 'Kennedy Moyo',    dept: 'Executive Director Office' },
+            'deeds@agric.gov.zw':      { role_id: 'DEEDS_ROLE',        section: 'deeds',     name: 'Patience Gweru',  dept: 'Deeds Registry Department' },
+            'admin@agric.gov.zw':      { role_id: 'SYSTEM_ADMIN_ROLE', section: 'users',     name: 'Admin Superuser', dept: 'System Administrator' },
+        };
+
+        let currentSelected = CREDENTIAL_MAP['lims@agric.gov.zw'];
+
+        function selectOfficer(roleId, section, name, email, label, color, icon) {
+            document.querySelectorAll('.dept-card').forEach(c => c.classList.remove('selected'));
+            if (event && event.currentTarget) event.currentTarget.classList.add('selected');
+
+            document.getElementById('officerEmail').value = email;
+            document.getElementById('officerPassword').value = 'password123';
+
+            currentSelected = { role_id: roleId, section: section, name: name, email: email, dept: label };
+
+            const alertEl = document.getElementById('selectedChannelAlert');
+            alertEl.style.display = 'block';
+            alertEl.style.borderColor = color;
+            alertEl.style.background = `${color}18`;
+            document.getElementById('selectedChannelTitle').style.color = color;
+            document.getElementById('selectedChannelTitle').innerHTML = `${icon} Routing to ${name} (${label})`;
+            document.getElementById('selectedChannelDesc').textContent = section === 'users' ? 'Directs to Administrator Console for duty & privilege delegation' : `Directs to channel 'section=${section}'`;
+        }
+
+        document.getElementById('officerLoginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const emailInput = document.getElementById('officerEmail').value.trim().toLowerCase();
+            const btn = document.getElementById('loginBtn');
+            btn.innerHTML = '<span>Authenticating & Routing...</span>';
+
+            const officer = CREDENTIAL_MAP[emailInput] || currentSelected || {
+                role_id: 'LIMS_ROLE',
+                section: 'lims',
+                name: 'Officer User',
+                dept: 'Operations Directorate'
+            };
+
+            const userSession = {
+                id: 'demo-' + officer.role_id,
+                name: officer.name,
+                email: emailInput,
+                role_id: officer.role_id,
+                department: officer.dept
+            };
+
+            // Persist session
+            localStorage.setItem('admin_user', JSON.stringify(userSession));
+            localStorage.setItem('jwt', 'officer-jwt-' + officer.role_id);
+
+            // Redirect automatically to their own channel or user management for admin!
+            setTimeout(() => {
+                window.location.href = `admin.html?section=${officer.section}`;
+            }, 300);
+        });
+
+        // Initialize default selection
+        window.addEventListener('DOMContentLoaded', () => {
+            const firstCard = document.querySelector('.dept-card');
+            if (firstCard) firstCard.classList.add('selected');
+        });
+    </script>
+</body>
+</html>

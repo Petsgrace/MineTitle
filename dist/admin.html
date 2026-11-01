@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Stop Centre | Ministry of Lands Zimbabwe</title>
+    <meta name="description" content="Title Deeds One Stop Centre — Unified Mobile App Title Deeds Processing & Land Management System for the Ministry of Lands and Rural Development Zimbabwe.">
+    <link rel="icon" type="image/png" href="logo.png">
+    <meta name="theme-color" content="#021a11">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <div class="admin-layout">
+        <aside class="sidebar" id="sidebar">
+            <!-- Brand with Official National Emblem -->
+            <div class="sidebar-brand">
+                <img src="logo.png" alt="Republic of Zimbabwe Coat of Arms" class="brand-logo-img">
+                <div class="brand-text">
+                    <span class="brand-country">Republic of Zimbabwe</span>
+                    <span class="brand-title">One Stop Centre</span>
+                    <span class="brand-subtitle">Title Deeds & Land Management</span>
+                </div>
+            </div>
+
+            <!-- Main Nav -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Main</div>
+                <a class="nav-item active" data-section="dashboard" onclick="navigateTo('dashboard')">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" data-section="queue" onclick="navigateTo('queue')">
+                    <span class="nav-icon">📋</span>
+                    <span>Application Queue</span>
+                    <span class="nav-badge" id="navQueueBadge">0</span>
+                </a>
+                <a class="nav-item" data-section="analytics" onclick="navigateTo('analytics')">
+                    <span class="nav-icon">📈</span>
+                    <span>Analytics & Bottlenecks</span>
+                </a>
+                <a class="nav-item" data-section="documents" onclick="navigateTo('documents')">
+                    <span class="nav-icon">📄</span>
+                    <span>Document Vault</span>
+                </a>
+            </div>
+
+            <!-- Department Channels (The 9-Stage Unified Workflow) -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Department Channels (9 Stages)</div>
+                <a class="nav-item" data-section="resettlement" onclick="navigateTo('resettlement')">
+                    <span class="dept-dot" style="background:var(--dept-resettlement)"></span>
+                    <span>1. Resettlement</span>
+                    <span class="nav-badge" id="navResettlementBadge" style="background:var(--dept-resettlement);color:#fff">0</span>
+                </a>
+                <a class="nav-item" data-section="lims" onclick="navigateTo('lims')">
+                    <span class="dept-dot" style="background:var(--dept-lims)"></span>
+                    <span>2. LIMS / Lands</span>
+                    <span class="nav-badge" id="navLimsBadge" style="background:var(--dept-lims);color:#fff">0</span>
+                </a>
+                <a class="nav-item" data-section="zlc" onclick="navigateTo('zlc')">
+                    <span class="dept-dot" style="background:var(--dept-zlc)"></span>
+                    <span>3. ZLC Commission</span>
+                    <span class="nav-badge" id="navZlcBadge" style="background:var(--dept-zlc);color:#fff">0</span>
+                </a>
+                <a class="nav-item" data-section="gis" onclick="navigateTo('gis')">
+                    <span class="dept-dot" style="background:var(--dept-gis)"></span>
+                    <span>4. GIS Directorate</span>
+                    <span class="nav-badge" id="navGisBadge" style="background:var(--dept-gis);color:#fff">0</span>
+                </a>
+                <a class="nav-item" data-section="surveyor" onclick="navigateTo('surveyor')">
+                    <span class="dept-dot" style="background:var(--dept-surveyor)"></span>
+                    <span>5. Surveyor General</span>
+                    <span class="nav-badge" id="navSurveyorBadge" style="background:var(--dept-surveyor);color:#000">0</span>
+                </a>
+                <a class="nav-item" data-section="valuation" onclick="navigateTo('valuation')">
+                    <span class="dept-dot" style="background:var(--dept-valuation)"></span>
+                    <span>6. Valuation Directorate</span>
+                    <span class="nav-badge" id="navValuationBadge" style="background:var(--dept-valuation);color:#fff">0</span>
+                </a>
+                <a class="nav-item" data-section="director" onclick="navigateTo('director')">
+                    <span class="dept-dot" style="background:var(--dept-director)"></span>
+                    <span>7. Director of Lands</span>
+                    <span class="nav-badge" id="navDirectorBadge" style="background:var(--dept-director);color:#fff">0</span>
+                </a>
+                <a class="nav-item" data-section="deeds" onclick="navigateTo('deeds')">
+                    <span class="dept-dot" style="background:var(--dept-deeds)"></span>
+                    <span>8. Deeds Registry</span>
+                    <span class="nav-badge" id="navDeedsBadge" style="background:var(--dept-deeds);color:#fff">0</span>
+                </a>
+            </div>
+
+            <!-- Monitoring & Settings -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">System & Account</div>
+                <a class="nav-item" data-section="audit" onclick="navigateTo('audit')">
+                    <span class="nav-icon">📝</span>
+                    <span>Audit Trail</span>
+                </a>
+                <a class="nav-item" data-section="users" onclick="navigateTo('users')">
+                    <span class="nav-icon">👥</span>
+                    <span>User Management</span>
+                </a>
+                <a class="nav-item" data-section="profile" onclick="navigateTo('profile')">
+                    <span class="nav-icon">👤</span>
+                    <span>My Account & Role</span>
+                </a>
+            </div>
+
+            <!-- User Profile -->
+            <div class="sidebar-user" onclick="navigateTo('profile')" style="cursor:pointer" title="Click to open Account Settings & Switch Role">
+                <div class="user-avatar" id="sidebarAvatar">AD</div>
+                <div class="user-info">
+                    <span class="user-name" id="sidebarName">Loading...</span>
+                    <span class="user-role" id="sidebarRole">Officer</span>
+                </div>
+                <button class="btn btn-ghost btn-icon" onclick="event.stopPropagation();adminLogout()" title="Logout" style="margin-left:auto;flex-shrink:0;font-size:0.9rem">🚪</button>
+            </div>
+        </aside>
+
+        <!-- ===== HEADER ===== -->
+        <header class="admin-header">
+            <div class="header-left">
+                <button class="header-btn" onclick="toggleMobileSidebar()" style="display:none" id="mobileMenuBtn">☰</button>
+                <div class="header-gov-branding">
+                    <img src="logo.png" alt="Zimbabwe National Crest" class="header-crest-img">
+                    <div class="header-gov-titles">
+                        <div class="gov-country-label">REPUBLIC OF ZIMBABWE · MINISTRY OF LANDS</div>
+                        <div class="page-title" id="pageTitle">Dashboard Overview</div>
+                        <div class="page-breadcrumb" id="pageBreadcrumb">Home / Dashboard</div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="search-bar" style="width:240px">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search applications..." id="globalSearch" oninput="handleSearch(this.value)">
+                </div>
+
+                                <!-- Live Supabase Online Status Pill -->
+                <div class="supabase-status-pill" id="supabaseStatusPill" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.35rem 0.85rem;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:20px;font-size:0.78rem;color:#10b981;font-weight:600;cursor:pointer" title="Click to inspect live Supabase Cloud status">
+                    <span class="status-indicator-dot" style="width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;display:inline-block"></span>
+                    <span id="supabaseStatusText">Supabase Online</span>
+                    <span style="opacity:0.7;font-size:0.7rem;color:#10b981;border-left:1px solid rgba(16,185,129,0.3);padding-left:0.4rem;" id="supabasePing">EU-West-1 (50,000 Deeds)</span>
+                </div>
+
+                <!-- Quick Role Switcher Button -->
+                <button class="btn btn-ghost btn-sm" onclick="navigateTo('profile')" style="border:1px solid var(--border);border-radius:20px;padding:0.35rem 0.85rem;display:flex;align-items:center;gap:0.4rem;background:var(--surface)">
+                    <span id="headerRoleIcon">💰</span>
+                    <span id="headerRoleName" style="font-weight:600;font-size:0.8rem">Accounts</span>
+                    <span style="font-size:0.7rem;color:var(--text-muted)">⇄ Role</span>
+                </button>
+
+                <button class="header-btn" onclick="showToast('No new notifications','info')">
+                    🔔
+                    <span class="notif-dot"></span>
+                </button>
+                <button class="header-btn" onclick="navigateTo('profile')" title="Account Settings">⚙️</button>
+            </div>
+        </header>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="admin-main">
+
+            <!-- ============================== -->
+            <!-- SECTION: DASHBOARD OVERVIEW    -->
+            <!-- ============================== -->
+            <section class="admin-section active" id="section-dashboard">
+                <!-- Official Ministry Welcome & Security Banner -->
+                <div class="gov-hero-banner" style="background:linear-gradient(135deg, rgba(4,46,31,0.92) 0%, rgba(6,78,54,0.92) 100%); border:1px solid rgba(16,185,129,0.35); border-radius:14px; padding:1.25rem 1.5rem; margin-bottom:1.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1.25rem; box-shadow:0 8px 30px rgba(0,0,0,0.35); position:relative; overflow:hidden;">
+                    <div style="position:absolute; right:-20px; top:-20px; width:160px; height:160px; background:radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%); pointer-events:none;"></div>
+                    <div style="display:flex; align-items:center; gap:1.2rem;">
+                        <img src="logo.png" alt="Republic of Zimbabwe Emblem" style="width:68px; height:68px; object-fit:contain; filter:drop-shadow(0 4px 10px rgba(16,185,129,0.5)) drop-shadow(0 0 14px rgba(251,191,36,0.3)); border-radius:8px; flex-shrink:0;">
+                        <div>
+                            <div style="font-size:0.7rem; font-weight:800; letter-spacing:0.1em; color:var(--gold); text-transform:uppercase;">GOVERNMENT OF ZIMBABWE · MINISTRY OF LANDS & RURAL DEVELOPMENT</div>
+                            <h2 style="font-size:1.45rem; font-weight:800; color:#fff; margin:0.2rem 0 0.35rem 0;">Unified Title Deeds Processing & Land Management System</h2>
+                            <p style="font-size:0.83rem; color:var(--text-secondary); max-width:680px; margin:0; line-height:1.4;">
+                                Statutory One Stop Centre integrating 9 ministerial departments under the Land Commission Act [Cap 20:29] & Deeds Registries Act [Cap 20:05]. PostGIS geodetic conflict validation active.
+                            </p>
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.4rem;">
+                        <span class="badge" style="background:rgba(16,185,129,0.22); color:#34d399; border:1px solid rgba(16,185,129,0.45); padding:0.45rem 0.85rem; font-size:0.75rem; font-weight:700;">● SECURE NATIONAL LEDGER ONLINE</span>
+                        <div style="font-size:0.72rem; color:var(--text-muted);">Harare Polytechnic · Project Proposal March 2026</div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card stat-total">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(59,130,246,0.15);color:var(--accent)">📋</div>
+                            <span class="stat-trend up">↑ 12%</span>
+                        </div>
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">Total Applications</div>
+                    </div>
+                    <div class="stat-card stat-pending">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--warning)">⏳</div>
+                            <span class="stat-trend down">↓ 5%</span>
+                        </div>
+                        <div class="stat-value" id="statPending">0</div>
+                        <div class="stat-label">Pending Review</div>
+                    </div>
+                    <div class="stat-card stat-progress">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(6,182,212,0.15);color:var(--dept-surveyor)">🔄</div>
+                            <span class="stat-trend up">↑ 8%</span>
+                        </div>
+                        <div class="stat-value" id="statProgress">0</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                    <div class="stat-card stat-complete">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:var(--success)">✅</div>
+                            <span class="stat-trend up">↑ 22%</span>
+                        </div>
+                        <div class="stat-value" id="statComplete">0</div>
+                        <div class="stat-label">Deeds Issued</div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Grid -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+                    <!-- Stage Distribution -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">📊 Pipeline Distribution</div>
+                        </div>
+                        <div class="panel-body" id="stageDistribution">
+                            <!-- JS populated -->
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">🕐 Recent Activity</div>
+                            <button class="btn btn-ghost btn-sm" onclick="navigateTo('audit')">View All →</button>
+                        </div>
+                        <div class="panel-body">
+                            <div class="timeline" id="recentActivity">
+                                <!-- JS populated -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Department Workload -->
+                <div class="panel" style="margin-top:1.5rem">
+                    <div class="panel-header">
+                        <div class="panel-title">🏢 Department Workload</div>
+                        <div class="panel-actions">
+                            <button class="btn btn-ghost btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem" id="deptWorkload">
+                            <!-- JS populated -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ============================== -->
+            <!-- SECTION: APPLICATION QUEUE      -->
+            <!-- ============================== -->
+            <section class="admin-section" id="section-queue">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            📋 Application Queue
+                            <span style="font-size:0.78rem;color:var(--text-muted);font-weight:400;margin-left:0.5rem" id="queueCount">0 applications</span>
+                        </div>
+                        <div class="panel-actions">
+                            <button class="btn btn-ghost btn-sm" onclick="loadQueue()">↻ Refresh</button>
+                            <button class="btn btn-primary btn-sm" onclick="showToast('Export feature coming soon','info')">⬇ Export CSV</button>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div style="padding:0.75rem 1.5rem;border-bottom:1px solid var(--border-light)">
+                        <div class="filter-bar" id="queueFilters">
+                            <button class="filter-pill active" data-filter="all" onclick="filterApplications('all')">All</button>
+                            <button class="filter-pill" data-filter="my-queue" onclick="filterApplications('my-queue')">📥 My Dept Queue</button>
+                            <button class="filter-pill" data-filter="PENDING" onclick="filterApplications('PENDING')">1. Pending</button>
+                            <button class="filter-pill" data-filter="RESETTLEMENT_VERIFIED" onclick="filterApplications('RESETTLEMENT_VERIFIED')">2. Resettlement</button>
+                            <button class="filter-pill" data-filter="LIMS_VERIFIED" onclick="filterApplications('LIMS_VERIFIED')">3. LIMS</button>
+                            <button class="filter-pill" data-filter="ZLC_CLEARED" onclick="filterApplications('ZLC_CLEARED')">4. ZLC</button>
+                            <button class="filter-pill" data-filter="GIS_VALIDATED" onclick="filterApplications('GIS_VALIDATED')">5. GIS</button>
+                            <button class="filter-pill" data-filter="SURVEYED" onclick="filterApplications('SURVEYED')">6. Surveyed</button>
+                            <button class="filter-pill" data-filter="VALUATED" onclick="filterApplications('VALUATED')">7. Valuated</button>
+                            <button class="filter-pill" data-filter="APPROVED" onclick="filterApplications('APPROVED')">8. Approved</button>
+                            <button class="filter-pill" data-filter="READY_FOR_COLLECTION" onclick="filterApplications('READY_FOR_COLLECTION')">9. Collection</button>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>App ID</th>
+                                    <th>Applicant</th>
+                                    <th>Doc Type</th>
+                                    <th>Province</th>
+                                    <th>Stage</th>
+                                    <th>Submitted</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queueTableBody">
+                                <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Loading queue...</div></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination">
+                        <div class="page-info">Showing all results</div>
+                        <div class="page-btns">
+                            <button class="page-btn">‹</button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">›</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ============================== -->
+            <!-- SECTION: ANALYTICS & BOTTLENECKS -->
+            <!-- ============================== -->
+            <section class="admin-section" id="section-analytics">
+                <!-- Analytics Hero -->
+                <div class="dept-channel-hero" style="background: linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(30,41,59,0.8) 100%); border-left: 4px solid var(--accent);">
+                    <div class="dept-hero-icon" style="background:rgba(59,130,246,0.2);color:var(--accent)">📈</div>
+                    <div class="dept-hero-content">
+                        <div class="dept-hero-title">
+                            Executive SLA Bottleneck & Intelligence Engine
+                            <span class="badge" style="background:rgba(16,185,129,0.2);color:var(--success);border:1px solid rgba(16,185,129,0.4);font-size:0.75rem;padding:0.2rem 0.6rem">Stage-by-Stage Tracking</span>
+                        </div>
+                        <div class="dept-hero-desc">
+                            Real-time diagnostic analytics across all 9 statutory title processing departments. Monitors stage SLAs, flags overdue bottlenecks (TC-13), visualizes AI land conflict risk distributions (TC-12), and ensures transparent processing.
+                        </div>
+                        <div class="dept-hero-meta">
+                            <span>Statutory SLA Standard: <strong style="color:var(--text-primary)">45 Days Target</strong></span>
+                            <span>System Throughput: <strong style="color:var(--success)">High-Efficiency</strong></span>
+                            <span>Overdue Auto-Escalation: <strong style="color:#10b981">Active (Hourly Daemon)</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Summary -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(59,130,246,0.15);color:var(--accent)">📋</div>
+                            <span class="stat-trend up">Live</span>
+                        </div>
+                        <div class="stat-value" id="analyticsTotalApps">50,000+</div>
+                        <div class="stat-label">Total Applications In Registry</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:var(--success)">⏱️</div>
+                            <span class="stat-trend up">Target &lt;45d</span>
+                        </div>
+                        <div class="stat-value" id="analyticsAvgDays">22.8 Days</div>
+                        <div class="stat-label">Average Total Processing Cycle</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(239,68,68,0.15);color:var(--danger)">⚠️</div>
+                            <span class="stat-trend down" id="analyticsOverdueBadge">Escalated</span>
+                        </div>
+                        <div class="stat-value" id="analyticsOverdueCount">14</div>
+                        <div class="stat-label">Stage SLA Overdue Flags (TC-13)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--warning)">⚖️</div>
+                            <span class="stat-trend up">AI Model</span>
+                        </div>
+                        <div class="stat-value" id="analyticsLowRiskRate">88.4%</div>
+                        <div class="stat-label">Dispute-Free Rate (AI Predictor)</div>
+                    </div>
+                </div>
+
+                <!-- Stage SLA Diagnostic Breakdown -->
+                <div class="panel" style="margin-bottom:1.5rem">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">⏱️ Departmental Stage SLA & Bottleneck Analysis</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">Average processing days per department vs. gazetted statutory turnaround benchmarks.</div>
+                        </div>
+                        <div class="panel-actions">
+                            <button class="btn btn-ghost btn-sm" onclick="loadAnalyticsSection()">↻ Refresh SLA Metrics</button>
+                            <button class="btn btn-primary btn-sm" onclick="exportSlaReportCsv()">⬇ Export SLA Breakdown (CSV)</button>
+                        </div>
+                    </div>
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Processing Stage & Department</th>
+                                    <th>Gazetted SLA Target</th>
+                                    <th>Average Processing Time</th>
+                                    <th>SLA Performance Track</th>
+                                    <th>Queue Volume</th>
+                                    <th>Bottleneck Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsSlaTableBody">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="queuePagination" style="margin-top:1rem;padding:0.75rem 0;"></div>
+                </div>
+
+                <!-- Overdue Watchlist & AI Risk Heatmap Grid -->
+                <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:1.5rem">
+                    <!-- Overdue Escalation Watchlist -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title" style="color:var(--danger)">🚨 Overdue Escalation Watchlist (TC-13)</div>
+                            <button class="btn btn-ghost btn-sm" onclick="showToast('Escalation reminders dispatched to department heads','info')">✉️ Dispatch Alert</button>
+                        </div>
+                        <div class="panel-body" style="padding:0">
+                            <div class="data-table-wrapper">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>App Reference</th>
+                                            <th>Applicant</th>
+                                            <th>Stalled Stage</th>
+                                            <th>Days In Stage</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="analyticsOverdueTableBody">
+                                        <!-- Populated dynamically by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Dispute Risk Distribution -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">🤖 AI Dispute Risk Distribution (TC-12)</div>
+                        </div>
+                        <div class="panel-body">
+                            <div style="display:flex;flex-direction:column;gap:1.2rem">
+                                <div>
+                                    <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem">
+                                        <span style="color:var(--success);font-weight:600">🟢 Low Risk (&lt; 35% Conflict Probability)</span>
+                                        <strong style="color:var(--text-primary)">88.4% (44,200 files)</strong>
+                                    </div>
+                                    <div class="sla-progress-track">
+                                        <div class="sla-progress-fill" style="width:88.4%;background:var(--success)"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem">
+                                        <span style="color:var(--warning);font-weight:600">🟡 Medium Risk (35% – 70% Conflict Probability)</span>
+                                        <strong style="color:var(--text-primary)">9.2% (4,600 files)</strong>
+                                    </div>
+                                    <div class="sla-progress-track">
+                                        <div class="sla-progress-fill" style="width:9.2%;background:var(--warning)"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem">
+                                        <span style="color:var(--danger);font-weight:600">🔴 High Risk (&gt; 70% Boundary Overlap / Dispute)</span>
+                                        <strong style="color:var(--text-primary)">2.4% (1,200 files)</strong>
+                                    </div>
+                                    <div class="sla-progress-track">
+                                        <div class="sla-progress-fill" style="width:2.4%;background:var(--danger)"></div>
+                                    </div>
+                                </div>
+
+                                <div style="font-size:0.75rem;color:var(--text-muted);border-top:1px solid var(--border-light);padding-top:0.75rem">
+                                    💡 <strong>Model Performance:</strong> Automated spatial inference trained on Zimbabwe Land Commission historical boundary mediation records and PostGIS topological overlaps.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-section" id="section-documents">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">📄 Document Viewer</div>
+                        <div class="panel-actions">
+                            <div class="search-bar" style="width:220px">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" placeholder="Search documents..." oninput="handleSearch(this.value)">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1rem" id="documentsGrid">
+                            <!-- JS populated -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ============================== -->
+            <!-- SECTION: AUDIT TRAIL            -->
+            <!-- ============================== -->
+            <section class="admin-section" id="section-audit">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">📝 Complete Audit Trail</div>
+                        <div class="panel-actions">
+                            <button class="btn btn-ghost btn-sm" onclick="loadAuditLogs()">↻ Refresh</button>
+                            <button class="btn btn-primary btn-sm" onclick="showToast('Audit export coming soon','info')">⬇ Export</button>
+                        </div>
+                    </div>
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Officer</th>
+                                    <th>Action</th>
+                                    <th>Application</th>
+                                    <th>Stage</th>
+                                    <th>Comments</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTableBody">
+                                <tr><td colspan="6" class="text-center" style="padding:2rem">Loading audit data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ============================== -->
+            <!-- SECTION: USER MANAGEMENT & DUTY ASSIGNMENT -->
+            <!-- ============================== -->
+            <section class="admin-section" id="section-users">
+                <!-- Admin Authority Banner -->
+                <div class="dept-channel-hero" style="background: linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(30,41,59,0.8) 100%); border-left: 4px solid #ef4444;">
+                    <div class="dept-hero-icon" style="background:rgba(239,68,68,0.2);color:#ef4444">⚙️</div>
+                    <div class="dept-hero-content">
+                        <div class="dept-hero-title">
+                            Administrator Duty & Privilege Assignment Console
+                            <span class="badge" style="background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.4);font-size:0.75rem;padding:0.2rem 0.6rem">Level 7 Root Authority</span>
+                        </div>
+                        <div class="dept-hero-desc">
+                            Authorized under Public Service & Land Commission Acts: Configure department channels, delegate statutory endorsement authority, manage clearance credentials, and assign duties across the One Stop Centre.
+                        </div>
+                        <div class="dept-hero-meta">
+                            <span>Logged In Role: <strong style="color:var(--text-primary)" id="adminConsoleRole">System Administrator</strong></span>
+                            <span>Privilege Delegation: <strong style="color:#10b981">Enabled</strong></span>
+                            <span>Audit Logging: <strong style="color:var(--text-primary)">Cryptographic Fingerprinting Active</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin KPI Summary -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(239,68,68,0.15);color:#ef4444">👥</div>
+                            <span class="stat-trend up">Registered</span>
+                        </div>
+                        <div class="stat-value" id="adminTotalOfficers">9</div>
+                        <div class="stat-label">Total Officers Onboarded</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:var(--success)">🏢</div>
+                            <span class="stat-trend up">Operational</span>
+                        </div>
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">Active Department Channels</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--warning)">📜</div>
+                            <span class="stat-trend up">Clearance</span>
+                        </div>
+                        <div class="stat-value" id="adminTotalEndorsers">8</div>
+                        <div class="stat-label">Authorized Form Endorsers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6">🛡️</div>
+                            <span class="stat-trend up">Compliance</span>
+                        </div>
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Duty Segregation Ratio</div>
+                    </div>
+                </div>
+
+                <!-- Officers & Duty Assignment Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">👥 Assigned Officers & Delegated Authorities</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">
+                                Select an officer to reassign their primary duty channel or configure individual statutory endorsement privileges.
+                            </div>
+                        </div>
+                        <div class="panel-actions">
+                            <button class="btn btn-primary btn-sm" onclick="openAddOfficerModal()">+ Register New Officer</button>
+                        </div>
+                    </div>
+
+                    <div style="padding:0.75rem 1.5rem;border-bottom:1px solid var(--border-light)">
+                        <div class="filter-bar" id="adminUserFilters">
+                            <button class="filter-pill active" onclick="filterOfficersList('all')">All Officers <span class="filter-count" id="officerCountAll">9</span></button>
+                            <button class="filter-pill" onclick="filterOfficersList('intake')">Intake (Resettlement & LIMS)</button>
+                            <button class="filter-pill" onclick="filterOfficersList('technical')">Technical (GIS & Surveyor General)</button>
+                            <button class="filter-pill" onclick="filterOfficersList('valuation_zlc')">Valuation & ZLC Commission</button>
+                            <button class="filter-pill" onclick="filterOfficersList('executive_deeds')">Executive Director & Deeds Registry</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-body">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:1rem" id="usersGrid">
+                            <!-- JS populated -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ============================== -->
+            <!-- SECTION: DEPARTMENT CHANNEL    -->
+            <!-- ============================== -->
+            <section class="admin-section" id="section-dept-channel">
+                <!-- Department Hero / Header -->
+                <div id="deptHeroBanner" class="dept-channel-hero">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Department KPIs -->
+                <div class="stats-grid" id="deptKpiGrid">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Department Work Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title" id="deptPanelTitle">🏢 Department Operations Queue</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem" id="deptPanelSubtitle">Review submissions, perform departmental checks, and endorse official clearances.</div>
+                        </div>
+                        <div class="panel-actions" id="deptPanelActions">
+                            <button class="btn btn-ghost btn-sm" onclick="reloadCurrentDeptChannel()">↻ Refresh</button>
+                        </div>
+                    </div>
+
+                    <!-- Department Filters -->
+                    <div style="padding:0.75rem 1.5rem;border-bottom:1px solid var(--border-light)">
+                        <div class="filter-bar" id="deptFilters">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Department Data Table -->
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead id="deptTableHead">
+                                <!-- Populated by JS -->
+                            </thead>
+                            <tbody id="deptTableBody">
+                                <tr><td colspan="7" class="text-center" style="padding:2rem">Loading department records...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ============================== -->
+            <!-- SECTION: ACCOUNTS & FINANCE     -->
+            <!-- ============================== -->
+            <section class="admin-section" id="section-accounts">
+                <!-- Financial KPI Summary -->
+                <div class="stats-grid">
+                    <div class="stat-card stat-revenue">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--warning)">💰</div>
+                            <span class="stat-trend up">USD Collections</span>
+                        </div>
+                        <div class="stat-value" id="accTotalRevenue">$0.00</div>
+                        <div class="stat-label">Total Revenue Collected</div>
+                    </div>
+                    <div class="stat-card stat-pending-fee">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(239,68,68,0.15);color:var(--danger)">⏳</div>
+                            <span class="stat-trend down" id="accPendingBadge">Action Required</span>
+                        </div>
+                        <div class="stat-value" id="accPendingCount">0</div>
+                        <div class="stat-label">Pending Verification</div>
+                    </div>
+                    <div class="stat-card stat-cleared">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:var(--success)">🧾</div>
+                            <span class="stat-trend up">Clearances</span>
+                        </div>
+                        <div class="stat-value" id="accClearedCount">0</div>
+                        <div class="stat-label">Accounts Cleared</div>
+                    </div>
+                    <div class="stat-card stat-total">
+                        <div class="stat-header">
+                            <div class="stat-icon" style="background:rgba(59,130,246,0.15);color:var(--accent)">📊</div>
+                            <span class="stat-trend up">Compliance</span>
+                        </div>
+                        <div class="stat-value" id="accComplianceRate">100%</div>
+                        <div class="stat-label">Clearance Rate</div>
+                    </div>
+                </div>
+
+                <!-- Accounts Action Hub Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">💰 Accounts & Statutory Fee Administration</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">Verify payments, issue Form ACC-04 Financial Clearances, and manage revenue reconciliation</div>
+                        </div>
+                        <div class="panel-actions">
+                            <button class="btn btn-ghost btn-sm" onclick="loadAccountsSection()">↻ Refresh</button>
+                            <button class="btn btn-primary btn-sm" onclick="openFeeScheduleModal()">📜 Fee Schedule</button>
+                        </div>
+                    </div>
+
+                    <!-- Accounts Filter Bar -->
+                    <div style="padding:0.75rem 1.5rem;border-bottom:1px solid var(--border-light)">
+                        <div class="filter-bar" id="accountsFilters">
+                            <button class="filter-pill active" data-accfilter="all" onclick="filterAccounts('all')">All Financial Records</button>
+                            <button class="filter-pill" data-accfilter="pending" onclick="filterAccounts('pending')">⏳ Awaiting Accounts Review (<span id="accPendingFilterBadge">0</span>)</button>
+                            <button class="filter-pill" data-accfilter="paid" onclick="filterAccounts('paid')">✅ Cleared & Paid</button>
+                            <button class="filter-pill" data-accfilter="ecocash" onclick="filterAccounts('ecocash')">📱 EcoCash USD</button>
+                            <button class="filter-pill" data-accfilter="bank" onclick="filterAccounts('bank')">🏦 Bank / Nostro</button>
+                        </div>
+                    </div>
+
+                    <!-- Accounts Financial Table -->
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>App Reference</th>
+                                    <th>Applicant & ID</th>
+                                    <th>Farm & Size</th>
+                                    <th>Statutory Fee Assessment</th>
+                                    <th>Payment Mode & Ref</th>
+                                    <th>Financial Status</th>
+                                    <th>Accounts Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountsTableBody">
+                                <tr><td colspan="7" class="text-center" style="padding:2rem">Loading financial records...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ============================== -->
+            <!-- SECTION: OFFICER ACCOUNT & ROLE -->
+            <!-- ============================== -->
+            <section class="admin-section" id="section-profile">
+                <!-- Officer Profile Hero -->
+                <div class="profile-hero">
+                    <div class="profile-avatar-large" id="profileAvatarLarge">AD</div>
+                    <div style="flex:1">
+                        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.3rem;flex-wrap:wrap">
+                            <h2 style="font-size:1.5rem;font-weight:700;color:var(--text-primary)" id="profileFullName">Admin Superuser</h2>
+                            <span class="role-badge-pill" id="profileBadgePill" style="background:rgba(239,68,68,0.15);color:#ef4444">
+                                <span class="dept-dot" style="background:#ef4444"></span> System Administrator
+                            </span>
+                        </div>
+                        <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.6rem" id="profileEmail">admin@agric.gov.zw</div>
+                        <div style="display:flex;gap:1.5rem;font-size:0.78rem;color:var(--text-muted);flex-wrap:wrap">
+                            <span>Office: <strong style="color:var(--text-primary)">Harare One Stop Centre (Ngungunyana Building)</strong></span>
+                            <span>Clearance: <strong style="color:var(--success)">LEVEL 4 (CONFIDENTIAL)</strong></span>
+                            <span>Session: <strong style="color:var(--success)">● Authenticated</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Role Switcher for Pair Programming & Testing -->
+                <div class="panel" style="margin-bottom:1.5rem">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">👥 Switch Officer Role & Department</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">Click any role to switch your active identity and test department-specific approval buttons and queue filters.</div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="role-grid-selector" id="roleGridSelector">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Settings & Security -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">⚙️ Officer Preferences</div>
+                        </div>
+                        <div class="panel-body" style="display:flex;flex-direction:column;gap:1.2rem">
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <div>
+                                    <div style="font-weight:500;color:var(--text-primary)">Email Notifications</div>
+                                    <div style="font-size:0.75rem;color:var(--text-muted)">Receive alerts when new file arrives in your queue</div>
+                                </div>
+                                <input type="checkbox" checked style="accent-color:var(--accent);width:18px;height:18px">
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <div>
+                                    <div style="font-weight:500;color:var(--text-primary)">Auto-Attach Digital Seal</div>
+                                    <div style="font-size:0.75rem;color:var(--text-muted)">Embed encrypted stamp on approved certificates</div>
+                                </div>
+                                <input type="checkbox" checked style="accent-color:var(--accent);width:18px;height:18px">
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <div>
+                                    <div style="font-weight:500;color:var(--text-primary)">Audible Queue Chime</div>
+                                    <div style="font-size:0.75rem;color:var(--text-muted)">Play tone when batch files are assigned</div>
+                                </div>
+                                <input type="checkbox" style="accent-color:var(--accent);width:18px;height:18px">
+                            </div>
+                            <button class="btn btn-primary btn-sm" style="align-self:flex-start" onclick="showToast('Officer preferences updated','success')">Save Preferences</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">🔒 Credentials & Audit Protection</div>
+                        </div>
+                        <div class="panel-body" style="display:flex;flex-direction:column;gap:1rem">
+                            <div class="form-group">
+                                <div class="form-label">Active Passphrase</div>
+                                <input type="password" value="••••••••••••" readonly style="background:rgba(255,255,255,0.03);border:1px solid var(--border-light);border-radius:6px;padding:0.5rem;color:var(--text-muted);width:100%">
+                            </div>
+                            <div style="display:flex;gap:0.75rem">
+                                <button class="btn btn-ghost btn-sm" onclick="showToast('Password reset link dispatched to official email','info')">Change Password</button>
+                                <button class="btn btn-ghost btn-sm" onclick="showToast('2FA Security Token verified active','success')">2FA Token (Active)</button>
+                            </div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);border-top:1px solid var(--border-light);padding-top:0.75rem">
+                                🛡️ Government Land Administration Security: Every approval, payment verification, and deed registration is cryptographically fingerprinted in the audit log.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+
+    <!-- ===== DETAIL SLIDE PANEL ===== -->
+    <div class="slide-panel-overlay" id="panelOverlay" onclick="closeDetailPanel()"></div>
+    <div class="slide-panel" id="detailPanel">
+        <div class="slide-panel-header">
+            <div>
+                <div style="font-size:1rem;font-weight:600;color:var(--text-primary)">Application Details</div>
+                <div style="font-size:0.78rem;color:var(--text-muted)">ID: <code id="detailAppId">—</code></div>
+            </div>
+            <button class="btn btn-ghost btn-icon" onclick="closeDetailPanel()">✕</button>
+        </div>
+        <div class="slide-panel-body" id="detailBody">
+            <!-- JS populated -->
+        </div>
+        <div class="slide-panel-footer" id="detailFooter">
+            <!-- JS populated -->
+        </div>
+    </div>
+
+    <!-- ===== PAYMENT VERIFICATION MODAL ===== -->
+    <div class="modal-backdrop" id="paymentModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">💰 Payment Verification & Accounts Clearance</div>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('paymentModal')">✕</button>
+            </div>
+            <div class="modal-body" id="paymentModalBody">
+                <!-- JS populated -->
+            </div>
+            <div class="modal-footer" id="paymentModalFooter">
+                <!-- JS populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== OFFICIAL CLEARANCE CERTIFICATE MODAL ===== -->
+    <div class="modal-backdrop" id="clearanceModal">
+        <div class="modal-dialog" style="max-width:760px">
+            <div class="modal-header">
+                <div class="modal-title">📜 Form ACC-04: Ministry Financial Clearance Certificate</div>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('clearanceModal')">✕</button>
+            </div>
+            <div class="modal-body" id="clearanceModalBody">
+                <!-- JS populated certificate -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('clearanceModal')">Close</button>
+                <button class="btn btn-primary" onclick="printClearanceCertificate()">🖨️ Print Certificate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== STATUTORY FEE SCHEDULE MODAL ===== -->
+    <div class="modal-backdrop" id="feeScheduleModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">📜 Statutory Fee Schedule (Land Act & Deeds Registry)</div>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('feeScheduleModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem">
+                    Official schedule of statutory fees Gazetted under the Land Commission Act [Chapter 20:29] and Deeds Registries Act [Chapter 20:05]:
+                </p>
+                <table class="fee-breakdown-table">
+                    <thead>
+                        <tr>
+                            <th>Statutory Item</th>
+                            <th>Gazetted Rate</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Land Titling Application Fee</strong></td>
+                            <td>USD $10.00</td>
+                            <td>Initial intake, offer letter verification, and file setup</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cadastral Survey Levy</strong></td>
+                            <td>USD $150 – $400</td>
+                            <td>Surveyor General beacon inspection and diagram certification</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Valuation Directorate Appraisal</strong></td>
+                            <td>USD $120.00</td>
+                            <td>Assessment of capital improvements and base land value</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Deeds Registry Stamp Duty</strong></td>
+                            <td>USD $180.00</td>
+                            <td>Registration, seal, and archival in the Deeds Registry volume</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Average Statutory Cost</strong></td>
+                            <td><strong>USD $460 – $710</strong></td>
+                            <td>Subsidized under the Presidential Land Titling Program</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem">
+                    * Payments acceptable via EcoCash USD, RTGS, Interbank Zipit, Nostro transfer, and POS swipe.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('feeScheduleModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DEPARTMENT ACTION & ENDORSEMENT MODAL ===== -->
+    <div class="modal-backdrop" id="deptActionModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title" id="deptActionModalTitle">🏛️ Department Verification & Endorsement</div>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('deptActionModal')">✕</button>
+            </div>
+            <div class="modal-body" id="deptActionModalBody">
+                <!-- JS populated -->
+            </div>
+            <div class="modal-footer" id="deptActionModalFooter">
+                <!-- JS populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DEPARTMENT CERTIFICATE & FORM MODAL ===== -->
+    <div class="modal-backdrop" id="deptCertModal">
+        <div class="modal-dialog" style="max-width:760px">
+            <div class="modal-header">
+                <div class="modal-title" id="deptCertModalTitle">📜 Official Ministry Clearance Certificate</div>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('deptCertModal')">✕</button>
+            </div>
+            <div class="modal-body" id="deptCertModalBody">
+                <!-- JS populated certificate -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('deptCertModal')">Close</button>
+                <button class="btn btn-primary" onclick="window.print()">🖨️ Print Certificate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ASSIGN DUTIES & PRIVILEGES MODAL ===== -->
+    <div class="modal-backdrop" id="assignPrivilegesModal">
+        <div class="modal-dialog" style="max-width:620px">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ Assign Duties & Operational Privileges</div>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('assignPrivilegesModal')">✕</button>
+            </div>
+            <div class="modal-body" id="assignPrivilegesBody">
+                <!-- JS populated -->
+            </div>
+            <div class="modal-footer" id="assignPrivilegesFooter">
+                <!-- JS populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== REGISTER NEW OFFICER MODAL ===== -->
+    <div class="modal-backdrop" id="addOfficerModal">
+        <div class="modal-dialog" style="max-width:540px">
+            <div class="modal-header">
+                <div class="modal-title">➕ Register & Onboard New Officer</div>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('addOfficerModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="addOfficerForm" onsubmit="event.preventDefault(); saveNewOfficer();" style="display:flex;flex-direction:column;gap:1rem">
+                    <div class="form-group">
+                        <label class="form-label">Full Officer Name</label>
+                        <input type="text" id="newOfficerName" class="form-control" required placeholder="e.g. Farai Mutasa">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Government Email Address</label>
+                        <input type="email" id="newOfficerEmail" class="form-control" required placeholder="e.g. f.mutasa@agric.gov.zw">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assigned Department Duty Channel</label>
+                        <select id="newOfficerRole" class="form-control" required>
+                            <option value="resettlement">🌱 Resettlement Department (Offer Letter, Spouse & Estate Clearance Form RES-01)</option>
+                            <option value="lims">🗺️ LIMS / Lands Information ($10 Statutory Fee & Cadastral ID Form LIMS-02)</option>
+                            <option value="zlc">⚖️ Zimbabwe Land Commission (Dispute & Jurisdiction Clearance Form ZLC-03)</option>
+                            <option value="gis">🛰️ GIS & Remote Sensing (Spatial Overlap & AI Conflict Risk Form GIS-04)</option>
+                            <option value="surveyor">📐 Surveyor General Directorate (Cadastral Survey Diagram Form SG-05)</option>
+                            <option value="valuation">📊 Valuation Directorate (Land & Improvements Valuation Form VAL-06)</option>
+                            <option value="director">👔 Executive Director Office (Executive Title Grant Warrant Form ED-07)</option>
+                            <option value="deeds">📜 Deeds Registry Department (Deed Registration & Great Seal Form DR-08)</option>
+                            <option value="admin">⚙️ System Administrator (Duty & Privilege Delegator)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Security Clearance Level</label>
+                        <select id="newOfficerClearance" class="form-control">
+                            <option value="LEVEL 1 (RESETTLEMENT)">Level 1 (Intake, Offer Letter & Succession Screening)</option>
+                            <option value="LEVEL 2 (LIMS & FEES)">Level 2 (LIMS Cadastral ID & $10 Fee Reconciliations)</option>
+                            <option value="LEVEL 3 (DISPUTE CLEARANCE)">Level 3 (ZLC Land Commission Dispute Clearance)</option>
+                            <option value="LEVEL 4 (GIS & REMOTE SENSING)">Level 4 (GIS PostGIS ST_Intersects & AI Risk Engine)</option>
+                            <option value="LEVEL 5 (CADASTRAL SURVEY)">Level 5 (Cadastral Survey Diagram & Geodetic Datum)</option>
+                            <option value="LEVEL 6 (VALUATION)">Level 6 (Capital Land & Improvements Valuation)</option>
+                            <option value="LEVEL 7 (MINISTERIAL GRANT)">Level 7 (Ministerial Title Grant Delegation)</option>
+                            <option value="LEVEL 8 (DEEDS REGISTRY)">Level 8 (Deeds Registry & Great Seal Custody)</option>
+                            <option value="LEVEL 9 (ROOT ADMIN)">Level 9 (Root System Administrator & Blockchain Auditor)</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer" style="padding:1rem 0 0;margin-top:0.5rem;border-top:1px solid var(--border-light)">
+                        <button type="button" class="btn btn-ghost" onclick="closeModal('addOfficerModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="font-weight:700">Deploy & Assign Duties</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== RETURN TO PRIOR STAGE MODAL (TC-08) ===== -->
+    <div class="modal-backdrop" id="returnStageModal">
+        <div class="modal-dialog" style="max-width:560px">
+            <div class="modal-header">
+                <div class="modal-title" style="color:var(--warning)">↩ Return Application to Prior Department Stage</div>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('returnStageModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:0.85rem;margin-bottom:1rem;font-size:0.82rem;color:var(--text-secondary)">
+                    <strong>Statutory Requirement (TC-08):</strong> Under Ministry regulations, applications returned to an earlier stage require mandatory officer documentation explaining the defect or required corrective action.
+                </div>
+                <form id="returnStageForm" onsubmit="event.preventDefault(); submitStageReturn();" style="display:flex;flex-direction:column;gap:1rem">
+                    <input type="hidden" id="returnAppId">
+                    <div class="form-group">
+                        <label class="form-label">Applicant & Reference</label>
+                        <div id="returnAppSummary" style="font-weight:600;color:var(--text-primary);padding:0.5rem 0.75rem;background:rgba(255,255,255,0.02);border:1px solid var(--border-light);border-radius:6px">—</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Return To Prior Department Stage <span style="color:var(--danger)">*</span></label>
+                        <select id="returnTargetStage" class="form-control" required>
+                            <!-- Populated dynamically based on current stage -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mandatory Return Reason / Defect Comments <span style="color:var(--danger)">*</span></label>
+                        <textarea id="returnComments" class="form-control" rows="3" required placeholder="Specify exact defect (e.g., Offer letter serial mismatch, boundary overlap with adjacent farm, missing death certificate, unpaid survey levy)..."></textarea>
+                        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.25rem">This comment is permanently anchored into the immutable SHA-256 audit ledger.</div>
+                    </div>
+                    <div class="modal-footer" style="padding:1rem 0 0;margin-top:0.5rem;border-top:1px solid var(--border-light)">
+                        <button type="button" class="btn btn-ghost" onclick="closeModal('returnStageModal')">Cancel</button>
+                        <button type="submit" class="btn btn-warning" style="font-weight:700">↩ Confirm Return to Stage</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== BLOCKCHAIN AUDIT LEDGER VIEWER MODAL (TC-11) ===== -->
+    <div class="modal-backdrop" id="auditChainModal">
+        <div class="modal-dialog" style="max-width:820px">
+            <div class="modal-header">
+                <div class="modal-title">⛓️ Cryptographic SHA-256 Audit Ledger Chain</div>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('auditChainModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="ledger-integrity-banner">
+                    <div>
+                        <div style="font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:0.5rem">
+                            <span id="chainIntegrityIcon">🛡️</span>
+                            <span id="chainIntegrityStatus">Audit Chain Status: Cryptographically Linked</span>
+                        </div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">
+                            Application: <strong id="auditChainAppRef">—</strong> · Verified Against: <strong style="color:var(--text-primary)">PostGIS & Django SHA-256 Block Engine</strong>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="verifyLedgerIntegrity()" style="font-weight:700">✓ Verify Hash Continuity</button>
+                </div>
+
+                <div class="ledger-chain-container" id="ledgerChainBlocks">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('auditChainModal')">Close</button>
+                <button class="btn btn-primary btn-sm" onclick="exportLedgerJson()">⬇ Export Chain JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== GIS SPATIAL OVERLAP & AI CONFLICT PREDICTOR MODAL (TC-10 & TC-12) ===== -->
+    <div class="modal-backdrop" id="gisOverlapModal">
+        <div class="modal-dialog" style="max-width:920px">
+            <div class="modal-header">
+                <div class="modal-title">🛰️ GIS Spatial Boundary Analysis & AI Dispute Conflict Predictor</div>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('gisOverlapModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="gis-widget-grid">
+                    <!-- Left: Interactive Spatial Map Canvas -->
+                    <div class="gis-map-canvas-container">
+                        <div id="gisStatusBadge" class="gis-status-badge clean">
+                            <span>●</span> <span id="gisStatusText">No Boundary Conflict Detected</span>
+                        </div>
+                        <svg viewBox="0 0 400 280" id="gisMapSvg">
+                            <!-- Background Grid -->
+                            <defs>
+                                <pattern id="gisGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+                                </pattern>
+                                <pattern id="overlapHatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                                    <line x1="0" y1="0" x2="0" y2="8" stroke="#ef4444" stroke-width="2" />
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#gisGrid)" />
+
+                            <!-- Adjacent Farms -->
+                            <polygon points="40,30 160,20 180,110 50,120" fill="rgba(100,116,139,0.12)" stroke="rgba(100,116,139,0.4)" stroke-width="1.5" stroke-dasharray="3,3" />
+                            <text x="70" y="70" fill="rgba(148,163,184,0.6)" font-size="10">Farm A-101 (State Land)</text>
+
+                            <polygon points="210,130 360,120 370,240 220,250" fill="rgba(100,116,139,0.12)" stroke="rgba(100,116,139,0.4)" stroke-width="1.5" stroke-dasharray="3,3" />
+                            <text x="240" y="190" fill="rgba(148,163,184,0.6)" font-size="10">Farm B-205 (Settled)</text>
+
+                            <!-- Candidate Parcel (Subject Land) -->
+                            <polygon id="gisSubjectPolygon" points="130,80 290,70 300,210 140,220" fill="rgba(2,132,199,0.25)" stroke="#0284c7" stroke-width="2.5" />
+                            <text id="gisSubjectLabel" x="160" y="150" fill="#38bdf8" font-size="12" font-weight="700">Parcel Subdivision</text>
+
+                            <!-- Overlap Polygon Zone (if conflict) -->
+                            <polygon id="gisOverlapPolygon" points="130,80 180,110 160,140 130,120" fill="url(#overlapHatch)" stroke="#ef4444" stroke-width="2" style="display:none" />
+                        </svg>
+                        <div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem;font-size:0.75rem;color:var(--text-muted)">
+                            <span>Geodetic Datum: <strong style="color:var(--text-primary)">WGS84 / SRID 4326</strong></span>
+                            <span>Engine: <strong style="color:var(--text-primary)">PostGIS ST_Intersects</strong></span>
+                            <span>Spatial Resolution: <strong style="color:var(--text-primary)">0.5m Orthorectified</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Right: AI Dispute Risk Predictor Engine -->
+                    <div style="display:flex;flex-direction:column;gap:1rem">
+                        <div class="ai-risk-gauge">
+                            <div class="ai-risk-score-circle" id="aiRiskCircle">
+                                <span id="aiRiskPercent">12%</span>
+                                <span style="font-size:0.65rem;text-transform:uppercase;color:inherit;font-weight:700" id="aiRiskLevelText">LOW RISK</span>
+                            </div>
+                            <div style="font-weight:700;color:var(--text-primary);font-size:0.95rem">AI Land Dispute Predictor</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.25rem" id="aiRecommendationText">
+                                Boundary cleared for Cadastral Survey. No tenure contestations registered in ZLC database.
+                            </div>
+                        </div>
+
+                        <!-- Contributing Factors -->
+                        <div style="background:var(--surface);border:1px solid var(--border-light);border-radius:12px;padding:1rem">
+                            <div style="font-size:0.8rem;font-weight:700;color:var(--text-primary);margin-bottom:0.6rem">Key Predictor Factors:</div>
+                            
+                            <div class="ai-factor-bar">
+                                <div style="display:flex;justify-content:space-between">
+                                    <span style="color:var(--text-muted)">Boundary Overlap Ratio (ST_Intersects)</span>
+                                    <strong id="aiFactorOverlap" style="color:var(--text-primary)">0.0%</strong>
+                                </div>
+                                <div class="ai-factor-track"><div id="aiTrackOverlap" class="ai-factor-fill" style="width:0%;background:var(--success)"></div></div>
+                            </div>
+
+                            <div class="ai-factor-bar">
+                                <div style="display:flex;justify-content:space-between">
+                                    <span style="color:var(--text-muted)">Gazette Notice Gazette Record Consistency</span>
+                                    <strong id="aiFactorGazette" style="color:var(--text-primary)">98.5%</strong>
+                                </div>
+                                <div class="ai-factor-track"><div id="aiTrackGazette" class="ai-factor-fill" style="width:98%;background:var(--accent)"></div></div>
+                            </div>
+
+                            <div class="ai-factor-bar">
+                                <div style="display:flex;justify-content:space-between">
+                                    <span style="color:var(--text-muted)">Communal Traditional Boundary Proximity</span>
+                                    <strong id="aiFactorCommunal" style="color:var(--text-primary)">Low (1.4 km)</strong>
+                                </div>
+                                <div class="ai-factor-track"><div id="aiTrackCommunal" class="ai-factor-fill" style="width:18%;background:var(--success)"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('gisOverlapModal')">Close</button>
+                <button class="btn btn-primary" onclick="simulateGisOverlapToggle()">Toggle Boundary Overlap Simulation</button>
+            </div>
+        </div>
+    <!-- ===== MOBILE OVERLAY BACKDROP & BOTTOM NAV ===== -->
+    <div class="mobile-sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
+    
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <button class="mobile-nav-btn active" id="mNavQueue" onclick="navigateTo('queue'); updateMobileNav(this)">
+            <span class="mb-icon">📋</span>
+            <span>Queue</span>
+        </button>
+        <button class="mobile-nav-btn" id="mNavChannels" onclick="toggleMobileSidebar()">
+            <span class="mb-icon">🏛️</span>
+            <span>Channels</span>
+        </button>
+        <button class="mobile-nav-btn" id="mNavGis" onclick="navigateTo('gis'); updateMobileNav(this)">
+            <span class="mb-icon">🛰️</span>
+            <span>GIS & AI</span>
+        </button>
+        <button class="mobile-nav-btn" id="mNavAnalytics" onclick="navigateTo('analytics'); updateMobileNav(this)">
+            <span class="mb-icon">📊</span>
+            <span>SLA</span>
+        </button>
+        <button class="mobile-nav-btn" id="mNavProfile" onclick="navigateTo('profile'); updateMobileNav(this)">
+            <span class="mb-icon">👤</span>
+            <span>Role</span>
+        </button>
+    </nav>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+
+    <!-- ===== SCRIPTS ===== -->
+    <script src="js/admin.js"></script>
+    <script>
+        // ─── INIT ───
+        (function init() {
+            // Auto-login with a demo officer account for immediate preview
+            if (!localStorage.getItem('admin_user')) {
+                // Default to Resettlement Officer for the 9-stage sequence demonstration
+                localStorage.setItem('admin_user', JSON.stringify({
+                    id: 'demo-resettlement',
+                    name: 'Farai Mutasa',
+                    email: 'resettlement@agric.gov.zw',
+                    role_id: 'resettlement',
+                    department: 'Resettlement Department'
+                }));
+            }
+
+            const user = checkAdminAuth();
+            if (!user) return;
+
+            // Set sidebar user info
+            const dept = DEPARTMENTS[user.role_id] || DEPARTMENTS['resettlement'];
+            document.getElementById('sidebarName').textContent = user.name;
+            document.getElementById('sidebarRole').textContent = dept ? dept.label : user.role_id;
+            document.getElementById('sidebarAvatar').textContent = user.name.split(' ').map(n => n[0]).join('');
+
+            // Update all department and queue badges
+            updateAllBadges();
+
+            // Header role button
+            updateHeaderAndSidebarUser();
+
+            // Load section based on URL query param or user role automatically
+            const urlParams = new URLSearchParams(window.location.search);
+            const ROLE_DEFAULT_SECTIONS = {
+                'resettlement': 'resettlement',
+                'RESETTLEMENT_ROLE': 'resettlement',
+                'lims': 'lims',
+                'LIMS_ROLE': 'lims',
+                'zlc': 'zlc',
+                'ZLC_ROLE': 'zlc',
+                'gis': 'gis',
+                'GIS_ROLE': 'gis',
+                'surveyor': 'surveyor',
+                'SURVEYOR_ROLE': 'surveyor',
+                'valuation': 'valuation',
+                'VALUATION_ROLE': 'valuation',
+                'director': 'director',
+                'DIRECTOR_ROLE': 'director',
+                'deeds': 'deeds',
+                'DEEDS_ROLE': 'deeds',
+                'admin': 'users',
+                'SYSTEM_ADMIN_ROLE': 'users',
+            };
+            const defaultSec = ROLE_DEFAULT_SECTIONS[user.role_id] || 'dashboard';
+            const initialSection = urlParams.get('section') || defaultSec;
+            navigateTo(initialSection);
+
+            // Responsive check
+            handleResize();
+            window.addEventListener('resize', handleResize);
+        })();
+
+        function handleResize() {
+            const btn = document.getElementById('mobileMenuBtn');
+            if (window.innerWidth <= 1024) {
+                btn.style.display = 'flex';
+            } else {
+                btn.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        // ─── ROLE SWITCHER (Demo Feature) ───
+        // Add a quick role-switcher for demonstration purposes
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' && e.ctrlKey && e.shiftKey) {
+                e.preventDefault();
+                const roles = Object.keys(DEPARTMENTS);
+                const currentIdx = roles.indexOf(currentUser.role_id);
+                const nextIdx = (currentIdx + 1) % roles.length;
+                const nextRole = roles[nextIdx];
+                const dept = DEPARTMENTS[nextRole];
+                const demoUser = DEMO_USERS.find(u => u.role_id === nextRole) || {
+                    name: dept.label,
+                    email: nextRole.toLowerCase() + '@agric.gov.zw',
+                };
+                localStorage.setItem('admin_user', JSON.stringify({
+                    id: 'demo-' + nextRole,
+                    name: demoUser.name,
+                    email: demoUser.email,
+                    role_id: nextRole,
+                    department: demoUser.department || dept.short
+                }));
+                location.reload();
+            }
+        });
+    </script>
+</body>
+</html>
