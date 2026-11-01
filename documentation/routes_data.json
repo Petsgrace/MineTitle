@@ -1,0 +1,1527 @@
+[
+  {
+    "pattern": "admin/",
+    "name": "index",
+    "callback": "onlineapplicationapi.admin.index_with_stats"
+  },
+  {
+    "pattern": "admin/login/",
+    "name": "login",
+    "callback": "django.contrib.admin.sites.login"
+  },
+  {
+    "pattern": "admin/logout/",
+    "name": "logout",
+    "callback": "django.contrib.admin.sites.logout"
+  },
+  {
+    "pattern": "admin/password_change/",
+    "name": "password_change",
+    "callback": "django.contrib.admin.sites.password_change"
+  },
+  {
+    "pattern": "admin/password_change/done/",
+    "name": "password_change_done",
+    "callback": "django.contrib.admin.sites.password_change_done"
+  },
+  {
+    "pattern": "admin/autocomplete/",
+    "name": "autocomplete",
+    "callback": "django.contrib.admin.sites.autocomplete_view"
+  },
+  {
+    "pattern": "admin/jsi18n/",
+    "name": "jsi18n",
+    "callback": "django.contrib.admin.sites.i18n_javascript"
+  },
+  {
+    "pattern": "admin/r/<path:content_type_id>/<path:object_id>/",
+    "name": "view_on_site",
+    "callback": "django.contrib.contenttypes.views.shortcut"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/emaillog/",
+    "name": "onlineapplicationapi_emaillog_changelist",
+    "callback": "django.contrib.admin.options.changelist_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/emaillog/add/",
+    "name": "onlineapplicationapi_emaillog_add",
+    "callback": "django.contrib.admin.options.add_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/emaillog/<path:object_id>/history/",
+    "name": "onlineapplicationapi_emaillog_history",
+    "callback": "django.contrib.admin.options.history_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/emaillog/<path:object_id>/delete/",
+    "name": "onlineapplicationapi_emaillog_delete",
+    "callback": "django.contrib.admin.options.delete_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/emaillog/<path:object_id>/change/",
+    "name": "onlineapplicationapi_emaillog_change",
+    "callback": "django.contrib.admin.options.change_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/emaillog/<path:object_id>/",
+    "name": null,
+    "callback": "django.views.generic.base.RedirectView"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/titledeedapplication/",
+    "name": "onlineapplicationapi_titledeedapplication_changelist",
+    "callback": "django.contrib.admin.options.changelist_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/titledeedapplication/add/",
+    "name": "onlineapplicationapi_titledeedapplication_add",
+    "callback": "django.contrib.admin.options.add_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/titledeedapplication/<path:object_id>/history/",
+    "name": "onlineapplicationapi_titledeedapplication_history",
+    "callback": "django.contrib.admin.options.history_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/titledeedapplication/<path:object_id>/delete/",
+    "name": "onlineapplicationapi_titledeedapplication_delete",
+    "callback": "django.contrib.admin.options.delete_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/titledeedapplication/<path:object_id>/change/",
+    "name": "onlineapplicationapi_titledeedapplication_change",
+    "callback": "django.contrib.admin.options.change_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/titledeedapplication/<path:object_id>/",
+    "name": null,
+    "callback": "django.views.generic.base.RedirectView"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/farmerprofile/",
+    "name": "onlineapplicationapi_farmerprofile_changelist",
+    "callback": "django.contrib.admin.options.changelist_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/farmerprofile/add/",
+    "name": "onlineapplicationapi_farmerprofile_add",
+    "callback": "django.contrib.admin.options.add_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/farmerprofile/<path:object_id>/history/",
+    "name": "onlineapplicationapi_farmerprofile_history",
+    "callback": "django.contrib.admin.options.history_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/farmerprofile/<path:object_id>/delete/",
+    "name": "onlineapplicationapi_farmerprofile_delete",
+    "callback": "django.contrib.admin.options.delete_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/farmerprofile/<path:object_id>/change/",
+    "name": "onlineapplicationapi_farmerprofile_change",
+    "callback": "django.contrib.admin.options.change_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/farmerprofile/<path:object_id>/",
+    "name": null,
+    "callback": "django.views.generic.base.RedirectView"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/spousedetail/",
+    "name": "onlineapplicationapi_spousedetail_changelist",
+    "callback": "django.contrib.admin.options.changelist_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/spousedetail/add/",
+    "name": "onlineapplicationapi_spousedetail_add",
+    "callback": "django.contrib.admin.options.add_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/spousedetail/<path:object_id>/history/",
+    "name": "onlineapplicationapi_spousedetail_history",
+    "callback": "django.contrib.admin.options.history_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/spousedetail/<path:object_id>/delete/",
+    "name": "onlineapplicationapi_spousedetail_delete",
+    "callback": "django.contrib.admin.options.delete_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/spousedetail/<path:object_id>/change/",
+    "name": "onlineapplicationapi_spousedetail_change",
+    "callback": "django.contrib.admin.options.change_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/spousedetail/<path:object_id>/",
+    "name": null,
+    "callback": "django.views.generic.base.RedirectView"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/staffprofile/",
+    "name": "onlineapplicationapi_staffprofile_changelist",
+    "callback": "django.contrib.admin.options.changelist_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/staffprofile/add/",
+    "name": "onlineapplicationapi_staffprofile_add",
+    "callback": "django.contrib.admin.options.add_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/staffprofile/<path:object_id>/history/",
+    "name": "onlineapplicationapi_staffprofile_history",
+    "callback": "django.contrib.admin.options.history_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/staffprofile/<path:object_id>/delete/",
+    "name": "onlineapplicationapi_staffprofile_delete",
+    "callback": "django.contrib.admin.options.delete_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/staffprofile/<path:object_id>/change/",
+    "name": "onlineapplicationapi_staffprofile_change",
+    "callback": "django.contrib.admin.options.change_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/staffprofile/<path:object_id>/",
+    "name": null,
+    "callback": "django.views.generic.base.RedirectView"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/applicationaction/",
+    "name": "onlineapplicationapi_applicationaction_changelist",
+    "callback": "django.contrib.admin.options.changelist_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/applicationaction/add/",
+    "name": "onlineapplicationapi_applicationaction_add",
+    "callback": "django.contrib.admin.options.add_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/applicationaction/<path:object_id>/history/",
+    "name": "onlineapplicationapi_applicationaction_history",
+    "callback": "django.contrib.admin.options.history_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/applicationaction/<path:object_id>/delete/",
+    "name": "onlineapplicationapi_applicationaction_delete",
+    "callback": "django.contrib.admin.options.delete_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/applicationaction/<path:object_id>/change/",
+    "name": "onlineapplicationapi_applicationaction_change",
+    "callback": "django.contrib.admin.options.change_view"
+  },
+  {
+    "pattern": "admin/onlineapplicationapi/applicationaction/<path:object_id>/",
+    "name": null,
+    "callback": "django.views.generic.base.RedirectView"
+  },
+  {
+    "pattern": "admin/auth/group/",
+    "name": "auth_group_changelist",
+    "callback": "django.contrib.admin.options.changelist_view"
+  },
+  {
+    "pattern": "admin/auth/group/add/",
+    "name": "auth_group_add",
+    "callback": "django.contrib.admin.options.add_view"
+  },
+  {
+    "pattern": "admin/auth/group/<path:object_id>/history/",
+    "name": "auth_group_history",
+    "callback": "django.contrib.admin.options.history_view"
+  },
+  {
+    "pattern": "admin/auth/group/<path:object_id>/delete/",
+    "name": "auth_group_delete",
+    "callback": "django.contrib.admin.options.delete_view"
+  },
+  {
+    "pattern": "admin/auth/group/<path:object_id>/change/",
+    "name": "auth_group_change",
+    "callback": "django.contrib.admin.options.change_view"
+  },
+  {
+    "pattern": "admin/auth/group/<path:object_id>/",
+    "name": null,
+    "callback": "django.views.generic.base.RedirectView"
+  },
+  {
+    "pattern": "admin/auth/user/<id>/password/",
+    "name": "auth_user_password_change",
+    "callback": "django.contrib.auth.admin.user_change_password"
+  },
+  {
+    "pattern": "admin/auth/user/",
+    "name": "auth_user_changelist",
+    "callback": "django.contrib.admin.options.changelist_view"
+  },
+  {
+    "pattern": "admin/auth/user/add/",
+    "name": "auth_user_add",
+    "callback": "django.contrib.auth.admin.add_view"
+  },
+  {
+    "pattern": "admin/auth/user/<path:object_id>/history/",
+    "name": "auth_user_history",
+    "callback": "django.contrib.admin.options.history_view"
+  },
+  {
+    "pattern": "admin/auth/user/<path:object_id>/delete/",
+    "name": "auth_user_delete",
+    "callback": "django.contrib.admin.options.delete_view"
+  },
+  {
+    "pattern": "admin/auth/user/<path:object_id>/change/",
+    "name": "auth_user_change",
+    "callback": "django.contrib.admin.options.change_view"
+  },
+  {
+    "pattern": "admin/auth/user/<path:object_id>/",
+    "name": null,
+    "callback": "django.views.generic.base.RedirectView"
+  },
+  {
+    "pattern": "admin/^(?P<app_label>onlineapplicationapi|auth)/$",
+    "name": "app_list",
+    "callback": "django.contrib.admin.sites.app_index"
+  },
+  {
+    "pattern": "admin/(?P<url>.*)$",
+    "name": null,
+    "callback": "django.contrib.admin.sites.catch_all_view"
+  },
+  {
+    "pattern": "api/v1/login/",
+    "name": "login",
+    "callback": "onlineapplicationapi.views.LoginView"
+  },
+  {
+    "pattern": "api/v1/logout/",
+    "name": "logout",
+    "callback": "onlineapplicationapi.views.LogoutView"
+  },
+  {
+    "pattern": "api/v1/check-session/",
+    "name": "check-session",
+    "callback": "onlineapplicationapi.views.CheckSessionView"
+  },
+  {
+    "pattern": "api/v1/user/profile/",
+    "name": "user-profile",
+    "callback": "onlineapplicationapi.views.UserProfileView"
+  },
+  {
+    "pattern": "api/v1/csrf-cookie/",
+    "name": "csrf-cookie",
+    "callback": "onlineapplicationapi.views.SetCSRFCookieView"
+  },
+  {
+    "pattern": "api/v1/password-reset/",
+    "name": "password-reset",
+    "callback": "onlineapplicationapi.views.PasswordResetRequestView"
+  },
+  {
+    "pattern": "api/v1/password-reset-confirm/",
+    "name": "password-reset-confirm",
+    "callback": "onlineapplicationapi.views.PasswordResetConfirmView"
+  },
+  {
+    "pattern": "api/v1/track/",
+    "name": "track-application",
+    "callback": "onlineapplicationapi.views.TrackApplicationView"
+  },
+  {
+    "pattern": "api/v1/gis/farms/",
+    "name": "gis-farms",
+    "callback": "onlineapplicationapi.views.GISFarmsView"
+  },
+  {
+    "pattern": "api/v1/applications/<int:pk>/ai-dispute-prediction/",
+    "name": "ai-dispute-prediction",
+    "callback": "onlineapplicationapi.views.AIDisputePredictionView"
+  },
+  {
+    "pattern": "api/v1/applications/<int:pk>/verify-audit-chain/",
+    "name": "verify-audit-chain",
+    "callback": "onlineapplicationapi.views.BlockchainAuditVerifyView"
+  },
+  {
+    "pattern": "api/v1/ai/what-if/",
+    "name": "ai-what-if",
+    "callback": "onlineapplicationapi.views.AIWhatIfView"
+  },
+  {
+    "pattern": "api/v1/ai/district-risk/",
+    "name": "ai-district-risk",
+    "callback": "onlineapplicationapi.views.AIDistrictRiskView"
+  },
+  {
+    "pattern": "api/v1/applications/<int:application_id>/document/<str:field_name>/",
+    "name": "secure-document-download",
+    "callback": "onlineapplicationapi.views.SecureDocumentDownloadView"
+  },
+  {
+    "pattern": "api/v1/^profiles/$",
+    "name": "profile-list",
+    "callback": "onlineapplicationapi.views.FarmerProfileViewSet"
+  },
+  {
+    "pattern": "api/v1/^profiles\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "profile-list",
+    "callback": "onlineapplicationapi.views.FarmerProfileViewSet"
+  },
+  {
+    "pattern": "api/v1/^profiles/(?P<pk>[^/.]+)/$",
+    "name": "profile-detail",
+    "callback": "onlineapplicationapi.views.FarmerProfileViewSet"
+  },
+  {
+    "pattern": "api/v1/^profiles/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "profile-detail",
+    "callback": "onlineapplicationapi.views.FarmerProfileViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/$",
+    "name": "application-list",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-list",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/assisted-capture/$",
+    "name": "application-assisted-capture",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/assisted-capture\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-assisted-capture",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/calculate-pricing/$",
+    "name": "application-calculate-pricing",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/calculate-pricing\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-calculate-pricing",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/dashboard_stats/$",
+    "name": "application-dashboard-stats",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/dashboard_stats\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-dashboard-stats",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/stats/$",
+    "name": "application-stats",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/stats\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-stats",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/$",
+    "name": "application-detail",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-detail",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/appeal_rejection/$",
+    "name": "application-appeal-rejection",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/appeal_rejection\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-appeal-rejection",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/approve/$",
+    "name": "application-approve",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/approve\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-approve",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/conclude-application/$",
+    "name": "application-conclude-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/conclude-application\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-conclude-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/escalate/$",
+    "name": "application-escalate",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/escalate\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-escalate",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/final_approve/$",
+    "name": "application-final-approve",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/final_approve\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-final-approve",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/generate_agreement/$",
+    "name": "application-generate-agreement",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/generate_agreement\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-generate-agreement",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/mark_surveyed/$",
+    "name": "application-mark-surveyed",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/mark_surveyed\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-mark-surveyed",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/pay_survey_fee/$",
+    "name": "application-pay-survey-fee",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/pay_survey_fee\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-pay-survey-fee",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/refer-back/$",
+    "name": "application-refer-back",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/refer-back\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-refer-back",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/reject/$",
+    "name": "application-reject",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/reject\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-reject",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/reject_application/$",
+    "name": "application-reject-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/reject_application\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-reject-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/resubmit_application/$",
+    "name": "application-resubmit-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/resubmit_application\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-resubmit-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/select-payment/$",
+    "name": "application-select-payment",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/select-payment\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-select-payment",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/set_valuation/$",
+    "name": "application-set-valuation",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/set_valuation\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-set-valuation",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/spatial/$",
+    "name": "application-spatial",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/spatial\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-spatial",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/technical_survey/$",
+    "name": "application-technical-survey",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/technical_survey\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-technical-survey",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/transition/$",
+    "name": "application-transition",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/transition\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-transition",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/verify_application_fee/$",
+    "name": "application-verify-application-fee",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/verify_application_fee\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-verify-application-fee",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/verify_estates/$",
+    "name": "application-verify-estates",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/verify_estates\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-verify-estates",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/verify_payment/$",
+    "name": "application-verify-payment",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/verify_payment\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-verify-payment",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/verify_zlc/$",
+    "name": "application-verify-zlc",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^applications/(?P<pk>[^/.]+)/verify_zlc\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-verify-zlc",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/v1/^register/$",
+    "name": "register-list",
+    "callback": "onlineapplicationapi.views.RegisterViewSet"
+  },
+  {
+    "pattern": "api/v1/^register\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "register-list",
+    "callback": "onlineapplicationapi.views.RegisterViewSet"
+  },
+  {
+    "pattern": "api/v1/^admin/staff/$",
+    "name": "admin-staff-list",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/v1/^admin/staff\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "admin-staff-list",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/v1/^admin/staff/(?P<pk>[^/.]+)/$",
+    "name": "admin-staff-detail",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/v1/^admin/staff/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "admin-staff-detail",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/v1/^admin/staff/(?P<pk>[^/.]+)/toggle_active/$",
+    "name": "admin-staff-toggle-active",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/v1/^admin/staff/(?P<pk>[^/.]+)/toggle_active\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "admin-staff-toggle-active",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/admin-overview/$",
+    "name": "report-admin-overview",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/admin-overview\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-admin-overview",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/audit-logs/$",
+    "name": "report-audit-logs",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/audit-logs\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-audit-logs",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/deeds/$",
+    "name": "report-deeds-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/deeds\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-deeds-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/director-applications/$",
+    "name": "report-director-applications",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/director-applications\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-director-applications",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/director/$",
+    "name": "report-director-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/director\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-director-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/export-csv/$",
+    "name": "report-export-csv",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/export-csv\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-export-csv",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/export-pdf/$",
+    "name": "report-export-pdf",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/export-pdf\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-export-pdf",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/finance/$",
+    "name": "report-finance-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/finance\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-finance-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/gis/$",
+    "name": "report-gis-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/gis\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-gis-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/lims/$",
+    "name": "report-lims-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/lims\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-lims-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/resettlement/$",
+    "name": "report-resettlement-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/resettlement\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-resettlement-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/role-applications/$",
+    "name": "report-role-applications",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/role-applications\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-role-applications",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/summary/$",
+    "name": "report-summary",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/summary\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-summary",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/surveyor/$",
+    "name": "report-surveyor-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/surveyor\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-surveyor-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/valuation/$",
+    "name": "report-valuation-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/valuation\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-valuation-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/zlc/$",
+    "name": "report-zlc-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^reports/zlc\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-zlc-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/v1/^integrate/all/$",
+    "name": "integrate-fetch-all",
+    "callback": "onlineapplicationapi.views.IntegrationViewSet"
+  },
+  {
+    "pattern": "api/v1/^integrate/all\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "integrate-fetch-all",
+    "callback": "onlineapplicationapi.views.IntegrationViewSet"
+  },
+  {
+    "pattern": "api/v1/^payments/$",
+    "name": "payment-list",
+    "callback": "onlineapplicationapi.views.PaymentViewSet"
+  },
+  {
+    "pattern": "api/v1/^payments\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "payment-list",
+    "callback": "onlineapplicationapi.views.PaymentViewSet"
+  },
+  {
+    "pattern": "api/v1/^payments/(?P<pk>[^/.]+)/$",
+    "name": "payment-detail",
+    "callback": "onlineapplicationapi.views.PaymentViewSet"
+  },
+  {
+    "pattern": "api/v1/^payments/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "payment-detail",
+    "callback": "onlineapplicationapi.views.PaymentViewSet"
+  },
+  {
+    "pattern": "api/v1/",
+    "name": "api-root",
+    "callback": "rest_framework.routers.APIRootView"
+  },
+  {
+    "pattern": "api/v1/<drf_format_suffix:format>",
+    "name": "api-root",
+    "callback": "rest_framework.routers.APIRootView"
+  },
+  {
+    "pattern": "api/login/",
+    "name": "login",
+    "callback": "onlineapplicationapi.views.LoginView"
+  },
+  {
+    "pattern": "api/logout/",
+    "name": "logout",
+    "callback": "onlineapplicationapi.views.LogoutView"
+  },
+  {
+    "pattern": "api/check-session/",
+    "name": "check-session",
+    "callback": "onlineapplicationapi.views.CheckSessionView"
+  },
+  {
+    "pattern": "api/user/profile/",
+    "name": "user-profile",
+    "callback": "onlineapplicationapi.views.UserProfileView"
+  },
+  {
+    "pattern": "api/csrf-cookie/",
+    "name": "csrf-cookie",
+    "callback": "onlineapplicationapi.views.SetCSRFCookieView"
+  },
+  {
+    "pattern": "api/password-reset/",
+    "name": "password-reset",
+    "callback": "onlineapplicationapi.views.PasswordResetRequestView"
+  },
+  {
+    "pattern": "api/password-reset-confirm/",
+    "name": "password-reset-confirm",
+    "callback": "onlineapplicationapi.views.PasswordResetConfirmView"
+  },
+  {
+    "pattern": "api/track/",
+    "name": "track-application",
+    "callback": "onlineapplicationapi.views.TrackApplicationView"
+  },
+  {
+    "pattern": "api/gis/farms/",
+    "name": "gis-farms",
+    "callback": "onlineapplicationapi.views.GISFarmsView"
+  },
+  {
+    "pattern": "api/applications/<int:pk>/ai-dispute-prediction/",
+    "name": "ai-dispute-prediction",
+    "callback": "onlineapplicationapi.views.AIDisputePredictionView"
+  },
+  {
+    "pattern": "api/applications/<int:pk>/verify-audit-chain/",
+    "name": "verify-audit-chain",
+    "callback": "onlineapplicationapi.views.BlockchainAuditVerifyView"
+  },
+  {
+    "pattern": "api/ai/what-if/",
+    "name": "ai-what-if",
+    "callback": "onlineapplicationapi.views.AIWhatIfView"
+  },
+  {
+    "pattern": "api/ai/district-risk/",
+    "name": "ai-district-risk",
+    "callback": "onlineapplicationapi.views.AIDistrictRiskView"
+  },
+  {
+    "pattern": "api/applications/<int:application_id>/document/<str:field_name>/",
+    "name": "secure-document-download",
+    "callback": "onlineapplicationapi.views.SecureDocumentDownloadView"
+  },
+  {
+    "pattern": "api/^profiles/$",
+    "name": "profile-list",
+    "callback": "onlineapplicationapi.views.FarmerProfileViewSet"
+  },
+  {
+    "pattern": "api/^profiles\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "profile-list",
+    "callback": "onlineapplicationapi.views.FarmerProfileViewSet"
+  },
+  {
+    "pattern": "api/^profiles/(?P<pk>[^/.]+)/$",
+    "name": "profile-detail",
+    "callback": "onlineapplicationapi.views.FarmerProfileViewSet"
+  },
+  {
+    "pattern": "api/^profiles/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "profile-detail",
+    "callback": "onlineapplicationapi.views.FarmerProfileViewSet"
+  },
+  {
+    "pattern": "api/^applications/$",
+    "name": "application-list",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-list",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/assisted-capture/$",
+    "name": "application-assisted-capture",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/assisted-capture\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-assisted-capture",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/calculate-pricing/$",
+    "name": "application-calculate-pricing",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/calculate-pricing\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-calculate-pricing",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/dashboard_stats/$",
+    "name": "application-dashboard-stats",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/dashboard_stats\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-dashboard-stats",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/stats/$",
+    "name": "application-stats",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/stats\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-stats",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/$",
+    "name": "application-detail",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-detail",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/appeal_rejection/$",
+    "name": "application-appeal-rejection",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/appeal_rejection\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-appeal-rejection",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/approve/$",
+    "name": "application-approve",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/approve\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-approve",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/conclude-application/$",
+    "name": "application-conclude-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/conclude-application\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-conclude-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/escalate/$",
+    "name": "application-escalate",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/escalate\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-escalate",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/final_approve/$",
+    "name": "application-final-approve",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/final_approve\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-final-approve",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/generate_agreement/$",
+    "name": "application-generate-agreement",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/generate_agreement\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-generate-agreement",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/mark_surveyed/$",
+    "name": "application-mark-surveyed",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/mark_surveyed\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-mark-surveyed",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/pay_survey_fee/$",
+    "name": "application-pay-survey-fee",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/pay_survey_fee\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-pay-survey-fee",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/refer-back/$",
+    "name": "application-refer-back",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/refer-back\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-refer-back",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/reject/$",
+    "name": "application-reject",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/reject\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-reject",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/reject_application/$",
+    "name": "application-reject-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/reject_application\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-reject-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/resubmit_application/$",
+    "name": "application-resubmit-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/resubmit_application\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-resubmit-application",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/select-payment/$",
+    "name": "application-select-payment",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/select-payment\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-select-payment",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/set_valuation/$",
+    "name": "application-set-valuation",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/set_valuation\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-set-valuation",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/spatial/$",
+    "name": "application-spatial",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/spatial\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-spatial",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/technical_survey/$",
+    "name": "application-technical-survey",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/technical_survey\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-technical-survey",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/transition/$",
+    "name": "application-transition",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/transition\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-transition",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/verify_application_fee/$",
+    "name": "application-verify-application-fee",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/verify_application_fee\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-verify-application-fee",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/verify_estates/$",
+    "name": "application-verify-estates",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/verify_estates\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-verify-estates",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/verify_payment/$",
+    "name": "application-verify-payment",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/verify_payment\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-verify-payment",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/verify_zlc/$",
+    "name": "application-verify-zlc",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^applications/(?P<pk>[^/.]+)/verify_zlc\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "application-verify-zlc",
+    "callback": "onlineapplicationapi.views.TitleDeedApplicationViewSet"
+  },
+  {
+    "pattern": "api/^register/$",
+    "name": "register-list",
+    "callback": "onlineapplicationapi.views.RegisterViewSet"
+  },
+  {
+    "pattern": "api/^register\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "register-list",
+    "callback": "onlineapplicationapi.views.RegisterViewSet"
+  },
+  {
+    "pattern": "api/^admin/staff/$",
+    "name": "admin-staff-list",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/^admin/staff\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "admin-staff-list",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/^admin/staff/(?P<pk>[^/.]+)/$",
+    "name": "admin-staff-detail",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/^admin/staff/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "admin-staff-detail",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/^admin/staff/(?P<pk>[^/.]+)/toggle_active/$",
+    "name": "admin-staff-toggle-active",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/^admin/staff/(?P<pk>[^/.]+)/toggle_active\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "admin-staff-toggle-active",
+    "callback": "onlineapplicationapi.views.AdminStaffViewSet"
+  },
+  {
+    "pattern": "api/^reports/admin-overview/$",
+    "name": "report-admin-overview",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/admin-overview\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-admin-overview",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/audit-logs/$",
+    "name": "report-audit-logs",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/audit-logs\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-audit-logs",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/deeds/$",
+    "name": "report-deeds-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/deeds\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-deeds-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/director-applications/$",
+    "name": "report-director-applications",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/director-applications\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-director-applications",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/director/$",
+    "name": "report-director-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/director\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-director-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/export-csv/$",
+    "name": "report-export-csv",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/export-csv\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-export-csv",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/export-pdf/$",
+    "name": "report-export-pdf",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/export-pdf\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-export-pdf",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/finance/$",
+    "name": "report-finance-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/finance\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-finance-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/gis/$",
+    "name": "report-gis-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/gis\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-gis-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/lims/$",
+    "name": "report-lims-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/lims\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-lims-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/resettlement/$",
+    "name": "report-resettlement-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/resettlement\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-resettlement-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/role-applications/$",
+    "name": "report-role-applications",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/role-applications\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-role-applications",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/summary/$",
+    "name": "report-summary",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/summary\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-summary",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/surveyor/$",
+    "name": "report-surveyor-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/surveyor\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-surveyor-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/valuation/$",
+    "name": "report-valuation-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/valuation\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-valuation-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/zlc/$",
+    "name": "report-zlc-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^reports/zlc\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "report-zlc-report",
+    "callback": "onlineapplicationapi.views.ReportViewSet"
+  },
+  {
+    "pattern": "api/^integrate/all/$",
+    "name": "integrate-fetch-all",
+    "callback": "onlineapplicationapi.views.IntegrationViewSet"
+  },
+  {
+    "pattern": "api/^integrate/all\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "integrate-fetch-all",
+    "callback": "onlineapplicationapi.views.IntegrationViewSet"
+  },
+  {
+    "pattern": "api/^payments/$",
+    "name": "payment-list",
+    "callback": "onlineapplicationapi.views.PaymentViewSet"
+  },
+  {
+    "pattern": "api/^payments\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "payment-list",
+    "callback": "onlineapplicationapi.views.PaymentViewSet"
+  },
+  {
+    "pattern": "api/^payments/(?P<pk>[^/.]+)/$",
+    "name": "payment-detail",
+    "callback": "onlineapplicationapi.views.PaymentViewSet"
+  },
+  {
+    "pattern": "api/^payments/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "name": "payment-detail",
+    "callback": "onlineapplicationapi.views.PaymentViewSet"
+  },
+  {
+    "pattern": "api/",
+    "name": "api-root",
+    "callback": "rest_framework.routers.APIRootView"
+  },
+  {
+    "pattern": "api/<drf_format_suffix:format>",
+    "name": "api-root",
+    "callback": "rest_framework.routers.APIRootView"
+  },
+  {
+    "pattern": "favicon.ico",
+    "name": null,
+    "callback": "django.views.generic.base.RedirectView"
+  },
+  {
+    "pattern": "admin.html",
+    "name": "admin-html",
+    "callback": "django.views.generic.base.TemplateView"
+  },
+  {
+    "pattern": "mobile-app.html",
+    "name": "mobile-app-html",
+    "callback": "django.views.generic.base.TemplateView"
+  },
+  {
+    "pattern": "^(?P<path>(css/|js/|assets/|logo\\.png|favicon\\.png|farmer-welcome\\.png).*)$",
+    "name": null,
+    "callback": "django.views.static.serve"
+  },
+  {
+    "pattern": "^media/(?P<path>.*)$",
+    "name": null,
+    "callback": "django.views.static.serve"
+  },
+  {
+    "pattern": "^(?!api/|admin/|static/|media/).*$",
+    "name": "spa-fallback",
+    "callback": "django.views.generic.base.TemplateView"
+  }
+]
