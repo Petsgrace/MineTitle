@@ -4,6 +4,7 @@ import { Landmark, LayoutGrid, FileText, Search, ShieldCheck, ArrowRight, CheckC
 
 const Home = ({ user, setUser }) => {
     const navigate = useNavigate()
+    const isNativeApp = Boolean((typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || (typeof window !== 'undefined' && (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:')))
 
     const handlePrimaryCTA = () => {
         if (user) {
@@ -35,7 +36,7 @@ const Home = ({ user, setUser }) => {
                         <div className="badge-icon">
                             <Landmark size={16} />
                         </div>
-                        <span>Government of Zimbabwe</span>
+                        <span>{isNativeApp ? 'Government of Zimbabwe • Mobile Field App v2.0' : 'Government of Zimbabwe • Online Web Portal'}</span>
                     </div>
 
                     <h1 className="hero-title">

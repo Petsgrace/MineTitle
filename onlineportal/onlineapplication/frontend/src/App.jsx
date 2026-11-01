@@ -212,6 +212,10 @@ function Header({ user, setUser }) {
     const [showPortalLinks, setShowPortalLinks] = useState(false)
     const [isProfileOpen, setIsProfileOpen] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false)
+    const isNativeApp = Boolean(
+        (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
+        (typeof window !== 'undefined' && (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:'))
+    )
 
     return (
         <header className="site-header">
@@ -223,8 +227,26 @@ function Header({ user, setUser }) {
                             <img src="/logo.png" alt="Land Tenure Implementation Committee" className="header-logo" />
                         </div>
                         <div className="header-brand-text">
-                            <span className="header-title">Unified Mobile Title Deeds</span>
-                            <span className="header-subtitle-text">Title Deeds Processing & Land Management System</span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="header-title">
+                                    {isNativeApp ? 'Title Deeds One Stop Center' : 'Unified Title Deeds Portal'}
+                                </span>
+                                <span
+                                    style={{
+                                        backgroundColor: isNativeApp ? 'rgba(245, 158, 11, 0.28)' : 'rgba(255, 255, 255, 0.16)',
+                                        borderColor: isNativeApp ? 'rgba(251, 191, 36, 0.65)' : 'rgba(255, 255, 255, 0.35)',
+                                        color: isNativeApp ? '#fef3c7' : '#ecfdf5',
+                                    }}
+                                    className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border"
+                                >
+                                    {isNativeApp ? 'Mobile Field App v2.0' : 'Online Web Portal'}
+                                </span>
+                            </div>
+                            <span className="header-subtitle-text">
+                                {isNativeApp
+                                    ? 'Ministry of Lands • Field Tablet & Offline Capture Edition'
+                                    : 'Title Deeds Processing & Land Management System'}
+                            </span>
                         </div>
                     </Link>
 
