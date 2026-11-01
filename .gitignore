@@ -26,3 +26,6 @@ data/store.json
 *.log
 .env
 onlineportal/onlineapplication/.env
+
+
+onlineportal/.git_backup_nested/
