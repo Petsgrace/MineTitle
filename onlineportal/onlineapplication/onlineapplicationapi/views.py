@@ -69,6 +69,8 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
                 
             target_stage = ROLE_STAGE_MAP.get(role)
             if target_stage:
+                if isinstance(target_stage, (list, tuple, set)):
+                    return base_qs.filter(status__in=target_stage).order_by('-created_at')
                 return base_qs.filter(status=target_stage).order_by('-created_at')
             return TitleDeedApplication.objects.none()
             
@@ -366,6 +368,48 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
         )
         return Response(result)
 
+    @action(detail=True, methods=['post'], url_path='verify_accounts', permission_classes=[IsOfficerOrAdmin])
+    def verify_accounts(self, request, pk=None):
+        """ACCOUNTS: Verify $10 statutory application fee and release to Estates."""
+        return self.verify_application_fee(request, pk)
+
+    @action(detail=True, methods=['post'], url_path='verify_surveyor', permission_classes=[IsOfficerOrAdmin])
+    def verify_surveyor(self, request, pk=None):
+        """SURVEYOR GENERAL: Validate cadastral survey diagram and boundaries."""
+        application = self.get_object()
+        action_type = (request.data.get('action_type') or 'SURVEYED').upper()
+        comments = request.data.get('comments') or request.data.get('officer_comments') or ''
+        from_st = application.status
+
+        if action_type in ('NOT_SURVEYED', 'REQUIRE_SURVEY'):
+            application.status = 'NOT_SURVEYED'
+            application.is_surveyed = False
+            log_type = 'SURVEY_REQUIRED_NOTIFIED'
+            note = comments or "Parcel requires technical cadastral survey. Notification dispatched to applicant."
+        elif action_type in ('UNAVAILABLE', 'STATUS_UNAVAILABLE'):
+            application.status = 'SURVEY_UNAVAILABLE'
+            log_type = 'SURVEY_STATUS_UNAVAILABLE'
+            note = comments or "Survey records status currently unavailable."
+        else:
+            application.status = 'SURVEYED'
+            application.is_surveyed = True
+            log_type = 'SURVEYED'
+            note = comments or "Cadastral survey diagram verified. Boundaries confirmed."
+
+        if comments:
+            application.officer_comments = comments
+        application.save()
+
+        ApplicationAction.objects.create(
+            application=application,
+            officer=request.user,
+            from_stage=from_st,
+            to_stage=application.status,
+            action_type=log_type,
+            comment=note
+        )
+        return Response({'status': f'Surveyor action: {log_type}', 'current_stage': application.status})
+
     @action(detail=True, methods=['post'], permission_classes=[IsOfficerOrAdmin])
     def verify_application_fee(self, request, pk=None):
         """ACCOUNTS: Verify $10 Application Fee"""
@@ -414,12 +458,27 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
         from .services.verification_service import VerificationService
         
         application = self.get_object()
+        action_type = request.data.get('action_type')
+        has_disputes = request.data.get('has_disputes')
+        dispute_nature = request.data.get('dispute_nature')
+        
+        if action_type:
+            act_up = str(action_type).upper()
+            if act_up in ('DOUBLE_ALLOCATION', 'DOUBLE'):
+                has_disputes = 'DOUBLE_ALLOCATION'
+                if not dispute_nature:
+                    dispute_nature = 'Double allocation detected in gazette records.'
+            elif act_up in ('DISPUTE', 'DISPUTED'):
+                has_disputes = True
+            elif act_up in ('CLEARED', 'CLEAR'):
+                has_disputes = False
+
         result = VerificationService.verify_zlc(
             application=application,
-            has_disputes=request.data.get('has_disputes'),
-            dispute_nature=request.data.get('dispute_nature'),
+            has_disputes=has_disputes,
+            dispute_nature=dispute_nature,
             officer=request.user,
-            comments=request.data.get('officer_comments')
+            comments=request.data.get('officer_comments') or request.data.get('comments')
         )
         if 'error' in result:
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
@@ -516,6 +575,11 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsOfficerOrAdmin])
     def set_valuation(self, request, pk=None):
         application = self.get_object()
+        if application.has_disputes or application.has_double_allocation or application.status in ('ZLC_DISPUTED', 'ZLC_DOUBLE_ALLOCATION'):
+            return Response(
+                {'error': 'Cannot commit valuation: Land parcel is locked due to an active ZLC dispute or double allocation.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         officer_comments = request.data.get('officer_comments', '')
         manual_price = request.data.get('manual_price') or request.data.get('valuation_amount')
         price_override_reason = request.data.get('price_override_reason', request.data.get('valuation_notes', ''))
@@ -562,8 +626,9 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
             # If they sent empty, maybe they mean "remove override"?
             # For safety, let's assume if they don't provide it, we use standard calc, UNLESS it was already set?
             # Better to reset it to False to ensure standard calc applies if field is empty
+            from decimal import Decimal
             application.is_manually_valuated = False
-            application.manual_valuation_price = None
+            application.manual_valuation_price = Decimal('0.00')
 
         if officer_comments:
             application.officer_comments = officer_comments
@@ -586,7 +651,13 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
         discount_text = '\n'.join(discount_lines) if discount_lines else '  None applied'
         
         # Email to farmer
-        email_message = f'''Dear {application.farmer.first_name},
+        farmer_name = "Valued Beneficiary"
+        if application.farmer and getattr(application.farmer, 'first_name', None):
+            farmer_name = application.farmer.first_name
+        elif getattr(application, 'beneficiary_name', None):
+            farmer_name = application.beneficiary_name.split()[0]
+
+        email_message = f'''Dear {farmer_name},
 
 Your application #{application.id} for farm "{application.farm_name}" has been valuated.
 
@@ -688,7 +759,15 @@ If you have any questions, please contact your nearest District Lands Office for
         return Response({'status': 'Payment verified, collection notification sent'})
 
     def send_status_email(self, application, subject, message):
-        recipient_email = application.farmer.email
+        recipient_email = None
+        if application and getattr(application, 'farmer', None) and getattr(application.farmer, 'email', None):
+            recipient_email = application.farmer.email
+        elif application and getattr(application, 'email', None):
+            recipient_email = application.email
+            
+        if not recipient_email:
+            print(f"[send_status_email] Skipping email '{subject}' - no recipient email on application #{getattr(application, 'id', None)}")
+            return
         # Append standard signature to all emails
         full_message = f"""{message}
 

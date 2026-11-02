@@ -34,19 +34,21 @@ class VerificationService:
         Returns:
             Dictionary with status message
         """
-        if status_action == 'QUERY':
-            application.status = 'QUERIED'
+        from_st = application.status
+        if status_action in ('QUERY', 'NOT_VERIFIED'):
+            application.status = 'LIMS_QUERIED'
             application.queried_by = 'lims'
-            application.rejection_reason = reason
+            application.rejection_reason = reason or "Discrepancy detected in cadastral or biometric records."
             application.lims_verification_status = False
-            action_type = 'QUERIED'
+            action_type = 'LIMS_QUERIED'
             note = f"Query: {reason}"
             EmailService.send_lims_query(application, reason)
         else:
             application.status = 'LIMS_VERIFIED'
             application.lims_verification_status = True
-            action_type = 'VERIFIED'
-            note = "Farm verified in database."
+            application.rejection_reason = None
+            action_type = 'LIMS_VERIFIED'
+            note = comments or "Farm verified in cadastral database. Beneficiary biometrics matched."
             EmailService.send_lims_verified(application)
         
         if comments:
@@ -57,7 +59,9 @@ class VerificationService:
         ApplicationAction.objects.create(
             application=application,
             officer=officer,
-            action_type=f'LIMS_{action_type}',
+            from_stage=from_st,
+            to_stage=application.status,
+            action_type=action_type,
             comment=note
         )
         
@@ -88,16 +92,25 @@ class VerificationService:
             application.application_fee_paid = False
             comment = "Application Fee ($10) NOT PAID. Will be added to purchase price."
         
-        # Move forward from LIMS_VERIFIED (if sequential)
-        if application.status == 'LIMS_VERIFIED':
-            application.status = 'ACCOUNTS_VERIFIED'
+        from_st = application.status
+        if is_paid_bool:
+            application.status = 'ACCOUNTS_CLEARED'
+            application.application_fee_paid = True
+            comment = "Application Fee ($10) PAID confirmed. Dossier released to Estates Officer."
+            act_type = 'ACCOUNTS_PAID'
+        else:
+            application.application_fee_paid = False
+            comment = "Application Fee ($10) NOT PAID."
+            act_type = 'ACCOUNTS_UNPAID'
         
         application.save()
         
         ApplicationAction.objects.create(
             application=application,
             officer=officer,
-            action_type='ACCOUNTS_FEE_CHECK',
+            from_stage=from_st,
+            to_stage=application.status,
+            action_type=act_type,
             comment=comment
         )
         
@@ -121,9 +134,9 @@ class VerificationService:
         Returns:
             Dictionary with status message
         """
-        if application.status in ['ACCOUNTS_VERIFIED', 'LIMS_VERIFIED']:
-            application.status = 'ESTATES_VERIFIED'
-        
+        from_st = application.status
+        application.status = 'ESTATES_CLEARED'
+        application.resettlement_estate_cleared = True
         if comments:
             application.officer_comments = comments
         
@@ -132,8 +145,10 @@ class VerificationService:
         ApplicationAction.objects.create(
             application=application,
             officer=officer,
-            action_type='ESTATES_VERIFIED',
-            comment="Farmer details verified."
+            from_stage=from_st,
+            to_stage='ESTATES_CLEARED',
+            action_type='ESTATES_CLEARED',
+            comment=comments or "Farmer identity, tenure document scans, and National ID cleared."
         )
         
         return {'status': 'Estates verification complete'}
@@ -157,25 +172,34 @@ class VerificationService:
         Returns:
             Dictionary with status message
         """
-        # Handle string booleans from multipart
-        has_disputes_bool = str(has_disputes).lower() in ['true', '1', 'yes'] if has_disputes is not None else False
+        from_st = application.status
+        act_upper = str(dispute_nature or '').upper() if has_disputes else 'CLEARED'
+        raw_action = str(has_disputes).upper()
         
-        if has_disputes_bool:
+        if raw_action in ('DOUBLE_ALLOCATION', 'DOUBLE') or 'DOUBLE' in act_upper:
+            application.has_double_allocation = True
             application.has_disputes = True
-            application.dispute_nature = dispute_nature
-            application.status = 'QUERIED'
-            application.rejection_reason = f"Dispute Logged: {dispute_nature}"
-            application.queried_by = 'zlc'
-            comment = f"Dispute Identified: {dispute_nature}"
-            action_type = 'DISPUTE_LOGGED'
-            EmailService.send_dispute_logged(application, dispute_nature)
+            application.dispute_nature = dispute_nature or "Double allocation detected in gazetted parcel records."
+            application.status = 'ZLC_DOUBLE_ALLOCATION'
+            application.rejection_reason = application.dispute_nature
+            comment = f"Double Allocation Flagged: {application.dispute_nature}. Title deed issuance locked."
+            log_type = 'ZLC_DOUBLE_ALLOCATION_LOCKED'
+        elif raw_action in ('DISPUTE', 'TRUE', '1', 'YES') or has_disputes is True:
+            application.has_disputes = True
+            application.dispute_nature = dispute_nature or "Active land/boundary dispute registered with ZLC."
+            application.status = 'ZLC_DISPUTED'
+            application.rejection_reason = application.dispute_nature
+            comment = f"Dispute Logged: {application.dispute_nature}. Title deed issuance locked."
+            log_type = 'ZLC_DISPUTE_LOCKED'
+            EmailService.send_dispute_logged(application, application.dispute_nature)
         else:
             application.has_disputes = False
+            application.has_double_allocation = False
             application.dispute_nature = None
-            application.status = 'ZLC_VERIFIED'
-            application.zlc_verification_status = True  # Set the flag!
-            comment = "No disputes found."
-            action_type = 'ZLC_VERIFIED'
+            application.status = 'ZLC_CLEARED'
+            application.zlc_verification_status = True
+            comment = comments or "Gazette records verified. No disputes or double allocations identified."
+            log_type = 'ZLC_CLEARED'
             EmailService.send_zlc_verified(application)
         
         if comments:
@@ -190,11 +214,13 @@ class VerificationService:
         ApplicationAction.objects.create(
             application=application,
             officer=officer,
-            action_type=action_type,
+            from_stage=from_st,
+            to_stage=application.status,
+            action_type=log_type,
             comment=comment
         )
         
-        return {'status': f'ZLC action: {action_type}'}
+        return {'status': f'ZLC action: {log_type}', 'current_stage': application.status}
     
     @staticmethod
     def require_technical_survey(application: TitleDeedApplication,

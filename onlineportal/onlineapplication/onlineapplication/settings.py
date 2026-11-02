@@ -15,10 +15,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
 
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
+load_dotenv()
 
 # ─── Core Security & Environment ─────────────────────────────────────────────
 
@@ -58,7 +58,7 @@ if extra_csrf:
         if clean_origin and clean_origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(clean_origin)
 if DEBUG:
-    for dev_origin in ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8000', 'http://127.0.0.1:8000']:
+    for dev_origin in ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8000', 'http://127.0.0.1:8000', 'http://10.100.3.201:5173', 'http://10.100.3.201:8000', 'http://10.100.3.93:5173', 'http://10.100.3.93:8000']:
         if dev_origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(dev_origin)
 

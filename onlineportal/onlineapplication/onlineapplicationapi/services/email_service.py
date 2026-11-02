@@ -143,6 +143,15 @@ If you did not initiate this login request, please alert the Security Administra
         except Exception as e:
             print(f"Error sending MFA email to {recipient_email}: {e}")
 
+    @staticmethod
+    def _get_farmer_name(application: TitleDeedApplication) -> str:
+        if application and getattr(application, 'farmer', None) and getattr(application.farmer, 'first_name', None):
+            return application.farmer.first_name
+        if application and getattr(application, 'beneficiary_name', None):
+            return application.beneficiary_name.split()[0]
+        return "Valued Beneficiary"
+
+    @staticmethod
     def _send_email(application: TitleDeedApplication, subject: str, message: str):
         """
         Internal method to send email with logging.
@@ -152,16 +161,28 @@ If you did not initiate this login request, please alert the Security Administra
             subject: Email subject
             message: Email body (signature will be appended)
         """
-        recipient_email = application.farmer.email
+        recipient_email = None
+        if application and getattr(application, 'farmer', None) and getattr(application.farmer, 'email', None):
+            recipient_email = application.farmer.email
+        elif application and getattr(application, 'email', None):
+            recipient_email = application.email
+        
+        if not recipient_email:
+            print(f"[EmailService] Skipping email '{subject}' - no recipient email on application #{getattr(application, 'id', None)}")
+            return
+
         full_message = f"{message}{EmailService.EMAIL_SIGNATURE}"
         
         print(f"Sending email to {recipient_email}: {subject}")
-        send_email_with_logging(
-            recipient=recipient_email,
-            subject=subject,
-            body=full_message,
-            application=application
-        )
+        try:
+            send_email_with_logging(
+                recipient=recipient_email,
+                subject=subject,
+                body=full_message,
+                application=application
+            )
+        except Exception as e:
+            print(f"[EmailService] Error sending email to {recipient_email}: {e}")
     
     @staticmethod
     def send_application_received(application: TitleDeedApplication):
@@ -171,8 +192,8 @@ If you did not initiate this login request, please alert the Security Administra
         Args:
             application: Newly created application
         """
-        farmer = application.farmer
-        message = f'''Dear {farmer.first_name},
+        farmer_name = EmailService._get_farmer_name(application)
+        message = f'''Dear {farmer_name},
 
 Your title deed application for farm "{application.farm_name}" has been successfully submitted.
 
@@ -222,8 +243,8 @@ Thank you for using the Title Deeds One Stop Center online portal.'''
             application: Application instance
             fee_amount: Survey fee amount
         """
-        farmer = application.farmer
-        message = f'''Dear {farmer.first_name},
+        farmer_name = EmailService._get_farmer_name(application)
+        message = f'''Dear {farmer_name},
 
 A technical survey is required for your farm "{application.farm_name}".
 
@@ -249,8 +270,8 @@ Payment can be made at your nearest District Lands Office.'''
         Args:
             application: Application instance
         """
-        farmer = application.farmer
-        message = f'''Dear {farmer.first_name},
+        farmer_name = EmailService._get_farmer_name(application)
+        message = f'''Dear {farmer_name},
         
 Your application #{application.id} for farm "{application.farm_name}" has been valued.
 
@@ -274,8 +295,8 @@ Thank you for your patience.'''
         Args:
             application: Application instance
         """
-        farmer = application.farmer
-        message = f'''Dear {farmer.first_name},
+        farmer_name = EmailService._get_farmer_name(application)
+        message = f'''Dear {farmer_name},
 
 Great news! Your application #{application.id} for farm "{application.farm_name}" has been approved following final valuation.
 
@@ -374,8 +395,8 @@ We look forward to finalizing your title deed process.'''
             application: Application instance
             reason: Reason for query
         """
-        farmer = application.farmer
-        message = f'''Dear {farmer.first_name},
+        farmer_name = EmailService._get_farmer_name(application)
+        message = f'''Dear {farmer_name},
 
 Your Title Deed application (Application ID: #{application.id}) has been queried and requires your attention.
 
@@ -401,8 +422,8 @@ If you have any questions, please contact your nearest District Lands Office for
             application: Application instance
             reason: Reason for rejection
         """
-        farmer = application.farmer
-        message = f'''Dear {farmer.first_name},
+        farmer_name = EmailService._get_farmer_name(application)
+        message = f'''Dear {farmer_name},
 
 We regret to inform you that your title deed application for farm "{application.farm_name}" has been rejected.
 

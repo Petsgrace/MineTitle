@@ -7,6 +7,12 @@ import OfficerLogin from './pages/OfficerLogin'
 import Signup from './pages/Signup'
 import FarmerDashboard from './pages/FarmerDashboard'
 import OfficerDashboard from './pages/OfficerDashboard'
+import AccountsDashboard from './pages/dashboards/AccountsDashboard'
+import EstatesDashboard from './pages/dashboards/EstatesDashboard'
+import LimsDashboard from './pages/dashboards/LimsDashboard'
+import ZlcDashboard from './pages/dashboards/ZlcDashboard'
+import SurveyorGeneralDashboard from './pages/dashboards/SurveyorGeneralDashboard'
+import ValuationDashboard from './pages/dashboards/ValuationDashboard'
 import ApplicationForm from './pages/ApplicationForm'
 import AdminDashboard from './pages/AdminDashboard'
 import Reports from './pages/Reports'
@@ -40,6 +46,30 @@ function normalizeStoredUser(rawUser) {
         channels: Array.isArray(rawUser.channels) ? rawUser.channels : [],
         privileges: Array.isArray(rawUser.privileges) ? rawUser.privileges : []
     };
+}
+
+export function getOfficerDashboardRoute(role) {
+    const r = (role || '').toLowerCase().trim();
+    if (r === 'admin') return '/admin-dashboard';
+    if (r === 'accounts') return '/officer/accounts';
+    if (r === 'estates' || r === 'resettlement') return '/officer/estates';
+    if (r === 'lims') return '/officer/lims';
+    if (r === 'zlc') return '/officer/zlc';
+    if (r === 'surveyor' || r === 'gis') return '/officer/surveyor';
+    if (r === 'valuation') return '/officer/valuation';
+    return '/officer-dashboard';
+}
+
+function OfficerDashboardDispatcher({ user }) {
+    const role = (user?.role || '').toLowerCase().trim();
+    if (role === 'accounts') return <AccountsDashboard user={user} />;
+    if (role === 'estates' || role === 'resettlement') return <EstatesDashboard user={user} />;
+    if (role === 'lims') return <LimsDashboard user={user} />;
+    if (role === 'zlc') return <ZlcDashboard user={user} />;
+    if (role === 'surveyor' || role === 'gis') return <SurveyorGeneralDashboard user={user} />;
+    if (role === 'valuation') return <ValuationDashboard user={user} />;
+    if (role === 'admin') return <Navigate to="/admin-dashboard" />;
+    return <OfficerDashboard user={user} />;
 }
 
 class ErrorBoundary extends Component {
@@ -359,27 +389,30 @@ function AccessDenied({ title = "Access Restricted", message = "You do not have 
     );
 }
 
+function getInitialUser() {
+    try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            const parsed = JSON.parse(storedUser);
+            return normalizeStoredUser(parsed);
+        }
+    } catch (e) {
+        // ignore malformed cached session data
+    }
+    return null;
+}
+
 function App() {
-    const [user, setUser] = useState(null);
-    const [isCheckingSession, setIsCheckingSession] = useState(true);
+    const [user, setUser] = useState(getInitialUser);
+    const [isCheckingSession, setIsCheckingSession] = useState(false);
 
     useEffect(() => {
-        try {
-            const storedUser = localStorage.getItem('user');
-            if (storedUser) {
-                const parsed = JSON.parse(storedUser);
-                const normalized = normalizeStoredUser(parsed);
-                if (normalized) {
-                    setUser(normalized);
-                }
-            }
-        } catch (e) {
-            // ignore malformed cached session data
-        } finally {
-            setIsCheckingSession(false);
+        const restored = getInitialUser();
+        if (restored && !user) {
+            setUser(restored);
         }
 
-        api.get('/check-session/', { timeout: 2000 })
+        api.get('/check-session/', { timeout: 2500 })
             .then(response => {
                 if (response.data && !response.data.error) {
                     const normalized = normalizeStoredUser(response.data);
@@ -388,12 +421,16 @@ function App() {
                         localStorage.setItem('user', JSON.stringify(normalized));
                     }
                 } else {
-                    localStorage.removeItem('user');
-                    setUser(null);
+                    // Only remove cached session if citizen and confirmed not authenticated
+                    const cached = getInitialUser();
+                    if (cached && cached.role === 'farmer') {
+                        localStorage.removeItem('user');
+                        setUser(null);
+                    }
                 }
             })
             .catch(() => {
-                // Keep the restored local session if one exists; otherwise remain logged out.
+                // Keep the restored local session when offline or network fails
             });
 
         api.get('/csrf-cookie/', { timeout: 1500 }).catch(() => {});
@@ -459,7 +496,7 @@ function App() {
                                 user ? (
                                     user.role === 'farmer' ? <Navigate to="/farmer-dashboard" /> :
                                         user.role === 'admin' ? <Navigate to="/admin-dashboard" /> :
-                                            <Navigate to="/officer-dashboard" />
+                                            <Navigate to={getOfficerDashboardRoute(user.role)} />
                                 ) : <Navigate to="/login" />
                             }
                         />
@@ -468,8 +505,32 @@ function App() {
                             element={user && (user.role === 'farmer' || user.role === 'admin') ? <FarmerDashboard user={user} /> : <Navigate to="/login" />}
                         />
                         <Route
+                            path="/officer/accounts"
+                            element={user && (user.role === 'accounts' || user.role === 'admin') ? <ErrorBoundary><AccountsDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                        />
+                        <Route
+                            path="/officer/estates"
+                            element={user && (user.role === 'estates' || user.role === 'resettlement' || user.role === 'admin') ? <ErrorBoundary><EstatesDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                        />
+                        <Route
+                            path="/officer/lims"
+                            element={user && (user.role === 'lims' || user.role === 'admin') ? <ErrorBoundary><LimsDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                        />
+                        <Route
+                            path="/officer/zlc"
+                            element={user && (user.role === 'zlc' || user.role === 'admin') ? <ErrorBoundary><ZlcDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                        />
+                        <Route
+                            path="/officer/surveyor"
+                            element={user && (user.role === 'surveyor' || user.role === 'gis' || user.role === 'admin') ? <ErrorBoundary><SurveyorGeneralDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                        />
+                        <Route
+                            path="/officer/valuation"
+                            element={user && (user.role === 'valuation' || user.role === 'admin') ? <ErrorBoundary><ValuationDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                        />
+                        <Route
                             path="/officer-dashboard"
-                            element={user && (user.role !== 'farmer') ? <ErrorBoundary><OfficerDashboard user={user} /></ErrorBoundary> : <Navigate to="/login" />}
+                            element={user && (user.role !== 'farmer') ? <ErrorBoundary><OfficerDashboardDispatcher user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
                         />
                         <Route
                             path="/admin-dashboard"

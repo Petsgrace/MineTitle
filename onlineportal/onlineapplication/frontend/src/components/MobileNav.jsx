@@ -1,22 +1,17 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Home, FilePlus, Search, Map, User, Briefcase } from 'lucide-react'
+import { Home, FilePlus, Search, Map } from 'lucide-react'
 
-export default function MobileNav({ user }) {
+export default function MobileNav() {
   const location = useLocation()
   const path = location.pathname
 
+  // Web only for officers: Officer Portal entry is completely removed from mobile navigation.
   const navItems = [
     { label: 'Home', to: '/', icon: Home, active: path === '/' },
     { label: 'Apply', to: '/apply', icon: FilePlus, active: path === '/apply' },
     { label: 'Track', to: '/track', icon: Search, active: path === '/track' },
     { label: 'GIS', to: '/gis-map', icon: Map, active: path === '/gis-map' },
-    {
-      label: 'Officer Portal',
-      to: (user && user.role !== 'farmer') ? (user.role === 'admin' ? '/admin-dashboard' : '/officer-dashboard') : '/officer-login',
-      icon: Briefcase,
-      active: path === '/officer-login' || path.includes('officer-dashboard') || path.includes('admin-dashboard'),
-    },
   ]
 
   return (

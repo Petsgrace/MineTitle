@@ -47,6 +47,10 @@ const OFFICER_DEPARTMENTS = [
 
 const Login = ({ setUser }) => {
     const navigate = useNavigate()
+    const isNativePlatform = Boolean(
+        (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()) ||
+        (typeof window !== 'undefined' && (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:'))
+    )
     const [role, setRole] = useState('farmer') // 'farmer' | 'officer'
     const [selectedDept, setSelectedDept] = useState(OFFICER_DEPARTMENTS[0])
     const [credentials, setCredentials] = useState({ username: '', password: '' })
@@ -67,10 +71,23 @@ const Login = ({ setUser }) => {
     }
 
     const routeByRole = (userRole) => {
-        if (userRole === 'admin') {
+        const r = (userRole || '').toLowerCase().trim()
+        if (r === 'admin') {
             navigate('/admin-dashboard')
-        } else if (userRole === 'farmer') {
+        } else if (r === 'farmer') {
             navigate('/dashboard')
+        } else if (r === 'accounts') {
+            navigate('/officer/accounts')
+        } else if (r === 'estates' || r === 'resettlement') {
+            navigate('/officer/estates')
+        } else if (r === 'lims') {
+            navigate('/officer/lims')
+        } else if (r === 'zlc') {
+            navigate('/officer/zlc')
+        } else if (r === 'surveyor' || r === 'gis') {
+            navigate('/officer/surveyor')
+        } else if (r === 'valuation') {
+            navigate('/officer/valuation')
         } else {
             navigate('/officer-dashboard')
         }
@@ -95,6 +112,11 @@ const Login = ({ setUser }) => {
             }
 
             const userData = response.data
+            if (isNativePlatform && (userData.role !== 'farmer' || role === 'officer')) {
+                setError('Officers must sign in using the web page.')
+                setIsLoading(false)
+                return
+            }
             if (setUser) setUser(userData)
             localStorage.setItem('user', JSON.stringify(userData))
             
@@ -157,7 +179,8 @@ const Login = ({ setUser }) => {
                     <p className="text-gray-500 mt-1 text-sm">Sign in to access your portal</p>
                 </div>
 
-                {/* Role Switcher: Farmer vs Officer */}
+                {/* Role Switcher: Farmer vs Officer (Web Only) */}
+                {!isNativePlatform && (
                 <div className="flex p-1 bg-gray-100/90 rounded-xl mb-6 border border-gray-200/60">
                     <button
                         type="button"
@@ -184,6 +207,7 @@ const Login = ({ setUser }) => {
                         <span>Officer</span>
                     </button>
                 </div>
+                )}
 
                 {/* Officer Department Selector (Appears only when Officer is selected) */}
                 {role === 'officer' && (

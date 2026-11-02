@@ -295,38 +295,164 @@ class TitleDeedApplicationSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         """
-        Hide purchase price and calculated land value from farmers 
-        until the application is approved by the Director.
-        
-        Note: Farmers should ONLY see purchase_price (final price after ALL discounts),
-        NOT calculated_land_value (land value before beneficiary discounts).
+        Field-level privilege filtering based on officer role and citizen access.
+        Enforces strict RBAC at the backend serializer layer.
         """
         data = super().to_representation(instance)
         request = self.context.get('request')
-        
-        # Define statuses that represent Director Approval / Release to Farmer
-        APPROVED_STATUSES = [
-            'SELECT_PAYMENT',
-            'AWAITING_PAYMENT', 
-            'AGREEMENT_OF_SALE', 
-            'PAYMENT_VERIFIED', 
-            'READY_FOR_COLLECTION', 
-            'APPROVED'
-        ]
-        
         user = getattr(request, 'user', None)
-        
-        # If the user is a farmer (authenticated but not staff)
-        if user and user.is_authenticated and not user.is_staff:
-            # Hide prices until director approves
+
+        if not user or not user.is_authenticated:
+            # Public / anonymous view (e.g. for track application)
+            allowed_public = {
+                'id', 'reference_number', 'status', 'created_at', 'current_stage_due_date',
+                'farm_name', 'district', 'province', 'application_fee_paid'
+            }
+            return {k: v for k, v in data.items() if k in allowed_public}
+
+        if user.is_superuser:
+            return data
+
+        role = None
+        if hasattr(user, 'staff_profile'):
+            role = (getattr(user.staff_profile, 'role', '') or '').lower().strip()
+        elif user.is_staff:
+            role = 'admin'
+
+        if role in ('admin', 'director'):
+            return data
+
+        # Helper to safely retrieve payment receipt number
+        def get_receipt_number():
+            if data.get('receipt_number'):
+                return data['receipt_number']
+            p = instance.payments.first()
+            if p:
+                return p.receipt_number
+            return data.get('statutory_fee_receipt') or f"REC-{instance.id:05d}"
+
+        # 1. ACCOUNTS OFFICER
+        # Sees ONLY: Receipt number, Beneficiary name, Surname, ID, Phone number, Farm name, Plot/subdivision number
+        if role == 'accounts':
+            allowed_accounts = {
+                'id', 'reference_number', 'status', 'created_at',
+                'receipt_number', 'beneficiary_name', 'farmer_name',
+                'surname', 'farmer_surname',
+                'national_id',
+                'phone_number', 'telephone',
+                'farm_name',
+                'subdivision_number', 'plot_number', 'farm_id',
+                'application_fee_paid'
+            }
+            data['receipt_number'] = get_receipt_number()
+            data['beneficiary_name'] = data.get('farmer_name') or ''
+            data['surname'] = data.get('farmer_surname') or ''
+            data['phone_number'] = data.get('telephone') or ''
+            data['subdivision_number'] = data.get('subdivision_number') or data.get('plot_number') or data.get('farm_id') or ''
+            return {k: v for k, v in data.items() if k in allowed_accounts}
+
+        # 2. ESTATES OFFICER
+        # Sees: date of application, farmer details (name, surname, ID, phone number),
+        # farm category, province, district, farm name, subdivision/plot number, size of the farm,
+        # pictures of the tenure document, front view of the National ID, comments
+        if role in ('estates', 'resettlement'):
+            allowed_estates = {
+                'id', 'reference_number', 'status', 'created_at',
+                'farmer_name', 'farmer_surname', 'national_id', 'telephone', 'phone_number',
+                'farm_category', 'province', 'district', 'farm_name',
+                'subdivision_number', 'plot_number', 'farm_id',
+                'farm_extent', 'arable_area',
+                'offer_letter_document', 'lease_document', 'permit_document', 'tenure_document',
+                'national_id_document', 'officer_comments', 'application_fee_paid'
+            }
+            data['subdivision_number'] = data.get('subdivision_number') or data.get('plot_number') or data.get('farm_id') or ''
+            data['phone_number'] = data.get('telephone') or ''
+            return {k: v for k, v in data.items() if k in allowed_estates}
+
+        # 3. LIMS OFFICER
+        # Sees everything Estates Officer sees PLUS all beneficiary photos and database status
+        if role == 'lims':
+            allowed_lims = {
+                'id', 'reference_number', 'status', 'created_at',
+                'farmer_name', 'farmer_surname', 'national_id', 'telephone', 'phone_number',
+                'farm_category', 'province', 'district', 'farm_name',
+                'subdivision_number', 'plot_number', 'farm_id',
+                'farm_extent', 'arable_area',
+                'offer_letter_document', 'lease_document', 'permit_document', 'tenure_document',
+                'national_id_document', 'officer_comments', 'application_fee_paid',
+                'portrait_photo', 'farmer_photo', 'photo_front', 'photo_side',
+                'lims_verification_status', 'lims_match', 'lims_status', 'cadastral_id'
+            }
+            data['subdivision_number'] = data.get('subdivision_number') or data.get('plot_number') or data.get('farm_id') or ''
+            data['phone_number'] = data.get('telephone') or ''
+            return {k: v for k, v in data.items() if k in allowed_lims}
+
+        # 4. ZLC OFFICER
+        # Sees: everything LIMS sees, plus gazette date, dispute status, double allocation flag
+        if role == 'zlc':
+            allowed_zlc = {
+                'id', 'reference_number', 'status', 'created_at',
+                'farmer_name', 'farmer_surname', 'national_id', 'telephone', 'phone_number',
+                'farm_category', 'province', 'district', 'farm_name',
+                'subdivision_number', 'plot_number', 'farm_id',
+                'farm_extent', 'arable_area',
+                'offer_letter_document', 'lease_document', 'permit_document', 'tenure_document',
+                'national_id_document', 'officer_comments', 'application_fee_paid',
+                'portrait_photo', 'farmer_photo', 'photo_front', 'photo_side',
+                'lims_verification_status', 'lims_match', 'lims_status', 'cadastral_id',
+                'gazette_date', 'has_disputes', 'dispute_nature', 'is_disputed',
+                'has_double_allocation', 'double_allocation_flag', 'zlc_comments', 'zlc_verification_status'
+            }
+            data['subdivision_number'] = data.get('subdivision_number') or data.get('plot_number') or data.get('farm_id') or ''
+            data['phone_number'] = data.get('telephone') or ''
+            return {k: v for k, v in data.items() if k in allowed_zlc}
+
+        # 5. SURVEYOR GENERAL OFFICER
+        # Sees: Farm name, plot/subdivision number, coordinate data, boundary information, diagram status
+        if role in ('surveyor', 'gis'):
+            allowed_surveyor = {
+                'id', 'reference_number', 'status', 'created_at',
+                'farm_name', 'subdivision_number', 'plot_number', 'farm_id',
+                'province', 'district', 'farm_extent',
+                'coordinate_data', 'coordinates', 'boundary_coordinates', 'boundary_data', 'gps_points',
+                'is_surveyed', 'survey_diagram_status', 'survey_diagram_number',
+                'survey_comments', 'officer_comments'
+            }
+            data['subdivision_number'] = data.get('subdivision_number') or data.get('plot_number') or data.get('farm_id') or ''
+            return {k: v for k, v in data.items() if k in allowed_surveyor}
+
+        # 6. VALUATION OFFICER
+        # Sees: all property details, land value, improvements, civil service / war veteran concessions
+        if role == 'valuation':
+            allowed_valuation = {
+                'id', 'reference_number', 'status', 'created_at',
+                'farmer_name', 'farmer_surname', 'national_id',
+                'farm_name', 'subdivision_number', 'plot_number', 'farm_id',
+                'province', 'district', 'farm_extent', 'arable_area',
+                'ecological_region', 'nearest_town', 'distance_to_town',
+                'water_source_type', 'water_source_distance',
+                'land_value', 'calculated_land_value', 'standard_rate_per_hectare',
+                'improvements_value', 'improvements_description',
+                'is_civil_servant', 'farmer_is_civil_servant', 'civil_service_years',
+                'is_war_veteran', 'farmer_is_war_veteran', 'war_vet_number',
+                'war_vet_concession_rate', 'war_vet_threshold_ha',
+                'purchase_price', 'valuation_approved', 'officer_comments'
+            }
+            data['is_war_veteran'] = data.get('farmer_is_war_veteran', getattr(instance.farmer, 'is_war_veteran', False) if instance.farmer else False)
+            data['is_civil_servant'] = data.get('farmer_is_civil_servant', getattr(instance.farmer, 'is_civil_servant', False) if instance.farmer else False)
+            data['subdivision_number'] = data.get('subdivision_number') or data.get('plot_number') or data.get('farm_id') or ''
+            return {k: v for k, v in data.items() if k in allowed_valuation}
+
+        # Citizen / Farmer: Hide prices until director approves
+        if not user.is_staff:
+            APPROVED_STATUSES = [
+                'SELECT_PAYMENT', 'AWAITING_PAYMENT', 'AGREEMENT_OF_SALE',
+                'PAYMENT_VERIFIED', 'READY_FOR_COLLECTION', 'APPROVED', 'VALUATED'
+            ]
             if instance.status not in APPROVED_STATUSES:
                 data['purchase_price'] = None
-                data['calculated_land_value'] = None
-            else:
-                # Even after approval, hide calculated_land_value from farmers
-                # They should only see the final purchase_price after ALL discounts
-                data['calculated_land_value'] = None
-                
+            data['calculated_land_value'] = None
+
         return data
 
     def create(self, validated_data):
