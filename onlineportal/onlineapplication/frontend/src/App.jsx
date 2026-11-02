@@ -26,6 +26,22 @@ axios.defaults.withCredentials = true
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 
+function normalizeStoredUser(rawUser) {
+    if (!rawUser || typeof rawUser !== 'object') return null;
+    const role = rawUser.role || '';
+    if (!role && !rawUser.username && !rawUser.name) return null;
+
+    return {
+        ...rawUser,
+        role: String(role).trim() || 'farmer',
+        name: rawUser.name || `${rawUser.first_name || ''} ${rawUser.last_name || ''}`.trim() || rawUser.username || 'User',
+        username: rawUser.username || rawUser.email || 'user',
+        department: rawUser.department || '',
+        channels: Array.isArray(rawUser.channels) ? rawUser.channels : [],
+        privileges: Array.isArray(rawUser.privileges) ? rawUser.privileges : []
+    };
+}
+
 class ErrorBoundary extends Component {
     constructor(props) {
         super(props);
@@ -221,7 +237,6 @@ function Header({ user, setUser }) {
         <header className="site-header">
             <div className="header-main">
                 <div className="header-inner">
-                    {/* Logo and Title */}
                     <Link to="/" className="header-brand">
                         <div className="header-logo-wrap">
                             <img src="/logo.png" alt="Land Tenure Implementation Committee" className="header-logo" />
@@ -250,15 +265,11 @@ function Header({ user, setUser }) {
                         </div>
                     </Link>
 
-                    {/* Navigation Menu */}
                     <nav className="header-nav">
-                        {/* Sync Status Indicator with Pending-Count Badge & Retry */}
                         <SyncStatusBadge />
-
 
                         {user && (
                             <>
-
                                 <div className="header-user-section">
                                     <button
                                         type="button"
@@ -289,9 +300,11 @@ function Header({ user, setUser }) {
                                                 comment: `User @${user?.username || user?.name} signed out.`
                                             });
                                             localStorage.removeItem('user');
+                                            localStorage.removeItem('admin_user');
                                             setIsProfileOpen(false);
                                             setIsLoggingOut(false);
                                             setUser(null);
+                                            navigate('/');
                                         }}
                                         className="header-logout-btn"
                                     >
@@ -314,7 +327,6 @@ function Header({ user, setUser }) {
                     </nav>
                 </div>
             </div>
-            {/* Zimbabwe flag accent stripe */}
             <div className="header-flag-stripe">
                 <div className="flag-green"></div>
                 <div className="flag-yellow"></div>
@@ -322,7 +334,6 @@ function Header({ user, setUser }) {
                 <div className="flag-black"></div>
             </div>
 
-            {/* User Profile Modal */}
             <ProfileModal
                 isOpen={isProfileOpen}
                 onClose={() => setIsProfileOpen(false)}
@@ -353,47 +364,41 @@ function App() {
     const [isCheckingSession, setIsCheckingSession] = useState(true);
 
     useEffect(() => {
-        // Fast synchronous restore from localStorage so mobile UI loads immediately
         try {
             const storedUser = localStorage.getItem('user');
             if (storedUser) {
                 const parsed = JSON.parse(storedUser);
-                setUser(parsed);
-            } else {
-                // Default Beneficiary profile for instant mobile app readiness
-                const localBeneficiary = {
-                    id: 'beneficiary-local',
-                    name: 'Beneficiary Applicant',
-                    username: 'farmer@gmail.com',
-                    email: 'farmer@gmail.com',
-                    role: 'farmer',
-                    department: 'Land Beneficiary'
-                };
-                setUser(localBeneficiary);
-                localStorage.setItem('user', JSON.stringify(localBeneficiary));
+                const normalized = normalizeStoredUser(parsed);
+                if (normalized) {
+                    setUser(normalized);
+                }
             }
         } catch (e) {
-            console.log('Session init complete');
+            // ignore malformed cached session data
         } finally {
             setIsCheckingSession(false);
         }
 
-        // Non-blocking background verification if server is reachable
         api.get('/check-session/', { timeout: 2000 })
             .then(response => {
-                if (response.data) {
-                    setUser(response.data);
-                    localStorage.setItem('user', JSON.stringify(response.data));
+                if (response.data && !response.data.error) {
+                    const normalized = normalizeStoredUser(response.data);
+                    if (normalized) {
+                        setUser(normalized);
+                        localStorage.setItem('user', JSON.stringify(normalized));
+                    }
+                } else {
+                    localStorage.removeItem('user');
+                    setUser(null);
                 }
             })
             .catch(() => {
-                // Keep local offline user on mobile / disconnected environments
+                // Keep the restored local session if one exists; otherwise remain logged out.
             });
 
         api.get('/csrf-cookie/', { timeout: 1500 }).catch(() => {});
     }, []);
 
-    // Automatic 30-minute inactivity session timeout for privileged Officer/Admin sessions
     useEffect(() => {
         if (!user || user.role === 'farmer') return;
         const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
@@ -410,6 +415,7 @@ function App() {
                     comment: `Privileged session timed out after 30 minutes of inactivity.`
                 });
                 localStorage.removeItem('user');
+                localStorage.removeItem('admin_user');
                 setUser(null);
             }, INACTIVITY_LIMIT_MS);
         };
@@ -424,7 +430,6 @@ function App() {
         };
     }, [user]);
 
-    // Show loading state while checking session
     if (isCheckingSession) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -489,7 +494,7 @@ function App() {
                                     (user.role === 'admin' || user.role === 'director' || (user.privileges && user.privileges.includes('view_audit_logs'))) ? (
                                         <AuditLogs user={user} />
                                     ) : (
-                                        <AccessDenied title="Audit Logs Access" message="You do not have access to view system audit logs. Only administrators and authorized officials can inspect audit trails." />
+                                        <AccessDenied title="Audit Logs Access" message="You do not have access to view system audit logs. Only administrators and authorized officials can inspect them." />
                                     )
                                 ) : <Navigate to="/login" />
                             }
