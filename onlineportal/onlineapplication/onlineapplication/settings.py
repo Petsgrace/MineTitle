@@ -13,56 +13,67 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ─── Core Security & Environment ─────────────────────────────────────────────
 
-# ─── Core Security ───────────────────────────────────────────────────────────
+# Read DEBUG strictly from environment variable, default False
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
+# Read SECRET_KEY from environment variable; raise error if missing when DEBUG=False
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
-
-# E1: Enforce production SECRET_KEY requirement
 if not SECRET_KEY:
-    if not DEBUG and os.getenv('DJANGO_SETTINGS_MODULE') and not os.getenv('TESTING'):
+    if not DEBUG:
         from django.core.exceptions import ImproperlyConfigured
-        raise ImproperlyConfigured("Insecure production deployment: SECRET_KEY environment variable is required when DEBUG=False.")
-    SECRET_KEY = 'django-insecure-antigravity-title-deeds-ministry-key-2026-nonprod'
+        raise ImproperlyConfigured("SECRET_KEY environment variable is required when DEBUG=False.")
+    SECRET_KEY = 'django-insecure-dev-fallback-key-only-used-when-debug-is-true'
 
-DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
+# ALLOWED_HOSTS: onestopproject.onrender.com, localhost, 127.0.0.1, plus RENDER_EXTERNAL_HOSTNAME
+ALLOWED_HOSTS = ['onestopproject.onrender.com', 'localhost', '127.0.0.1']
+render_external_hostname = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if render_external_hostname and render_external_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_external_hostname)
+extra_allowed_hosts = os.getenv('ALLOWED_HOSTS')
+if extra_allowed_hosts:
+    for host in extra_allowed_hosts.split(','):
+        clean_host = host.strip()
+        if clean_host and clean_host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(clean_host)
 
-ALLOWED_HOSTS = [
-    h.strip()
-    for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-    if h.strip()
-]
+# CSRF_TRUSTED_ORIGINS: full app domain, plus RENDER_EXTERNAL_HOSTNAME and optional env overrides
+CSRF_TRUSTED_ORIGINS = ['https://onestopproject.onrender.com']
+if render_external_hostname:
+    full_render_origin = f'https://{render_external_hostname}'
+    if full_render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(full_render_origin)
+extra_csrf = os.getenv('CSRF_TRUSTED_ORIGINS')
+if extra_csrf:
+    for origin in extra_csrf.split(','):
+        clean_origin = origin.strip()
+        if clean_origin and clean_origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(clean_origin)
 if DEBUG:
-    ALLOWED_HOSTS = ['*']
-    CORS_ALLOW_ALL_ORIGINS = DEBUG and os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False').lower() in ('true', '1')
+    for dev_origin in ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8000', 'http://127.0.0.1:8000']:
+        if dev_origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(dev_origin)
 
-# ─── CORS & CSRF ─────────────────────────────────────────────────────────────
-
-_default_origins = 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174'
-
-CSRF_TRUSTED_ORIGINS = [
-    o.strip()
-    for o in os.getenv('CSRF_TRUSTED_ORIGINS', _default_origins).split(',')
-    if o.strip()
-]
-
+# CORS configuration
+_default_cors = 'http://localhost:5173,http://127.0.0.1:5173,https://onestopproject.onrender.com'
 CORS_ALLOWED_ORIGINS = [
     o.strip()
-    for o in os.getenv('CORS_ALLOWED_ORIGINS', _default_origins).split(',')
+    for o in os.getenv('CORS_ALLOWED_ORIGINS', _default_cors).split(',')
     if o.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False').lower() in ('true', '1')
 
-
-# ─── Application definition ──────────────────────────────────────────────────
+# ─── Application Definition ──────────────────────────────────────────────────
 
 INSTALLED_APPS = [
     'onlineapplicationapi',
@@ -78,7 +89,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',   # Serve static files in production
+    'whitenoise.middleware.WhiteNoiseMiddleware',   # Must be directly after SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -94,8 +105,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'frontend' / 'dist',         # Prioritize built SPA
-            BASE_DIR / 'templates',                 # Fallback for index.html SPA placeholder
+            BASE_DIR / 'frontend' / 'dist',
+            BASE_DIR / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -110,75 +121,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'onlineapplication.wsgi.application'
 
+# ─── Database ────────────────────────────────────────────────────────────────
 
-# ─── Database ─────────────────────────────────────────────────────────────────
+# Use dj_database_url.config() to read DATABASE_URL, with local SQLite fallback
+DATABASES = {
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+}
 
-DATABASE_URL = os.getenv('DATABASE_URL')
-# Default to SQLite unless DATABASE_URL or USE_SQLITE=False is explicitly provided
-USE_SQLITE = os.getenv('USE_SQLITE', 'False' if DATABASE_URL else 'True').lower() == 'true'
-USE_POSTGIS = os.getenv('USE_POSTGIS', 'False').lower() == 'true'
-
-if DATABASE_URL and not USE_SQLITE:
-    import urllib.parse
-    parsed = urllib.parse.urlparse(DATABASE_URL)
-    db_engine = 'django.contrib.gis.db.backends.postgis' if USE_POSTGIS else 'django.db.backends.postgresql'
-    
-    # Handle query parameters (e.g. sslmode=require for Supabase)
-    query_params = urllib.parse.parse_qs(parsed.query)
-    sslmode = query_params.get('sslmode', [os.getenv('DB_SSLMODE', 'require')])[0]
-
-    DATABASES = {
-        'default': {
-            'ENGINE': db_engine,
-            'NAME': parsed.path.lstrip('/') or 'postgres',
-            'USER': urllib.parse.unquote(parsed.username or 'postgres'),
-            'PASSWORD': urllib.parse.unquote(parsed.password or ''),
-            'HOST': parsed.hostname or 'localhost',
-            'PORT': str(parsed.port or 5432),
-            'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '600')),
-            'OPTIONS': {
-                'sslmode': sslmode,
-                'options': '-c statement_timeout=180000',
-            }
-        }
-    }
-elif USE_SQLITE:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-else:
-    db_engine = 'django.contrib.gis.db.backends.postgis' if USE_POSTGIS else 'django.db.backends.postgresql'
-    db_name = os.getenv('DB_NAME')
-    db_user = os.getenv('DB_USER')
-    db_password = os.getenv('DB_PASSWORD')
-    
-    if not (db_name and db_user and db_password) and not DEBUG:
-        from django.core.exceptions import ImproperlyConfigured
-        raise ImproperlyConfigured("PostgreSQL database configuration in production requires DB_NAME, DB_USER, and DB_PASSWORD environment variables.")
-
-    DATABASES = {
-        'default': {
-            'ENGINE': db_engine,
-            'NAME': db_name or 'onestop_lands',
-            'USER': db_user or 'lands_admin',
-            'PASSWORD': db_password or '',
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '5432'),
-            'OPTIONS': {
-                'sslmode': os.getenv('DB_SSLMODE', 'prefer'),
-            }
-        }
-    }
-
-if USE_POSTGIS and not USE_SQLITE:
-    if 'django.contrib.gis' not in INSTALLED_APPS:
-        INSTALLED_APPS.append('django.contrib.gis')
-
-
-# ─── Password validation ─────────────────────────────────────────────────────
+# ─── Password Validation ─────────────────────────────────────────────────────
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -187,7 +141,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
 # ─── Internationalization ────────────────────────────────────────────────────
 
 LANGUAGE_CODE = 'en-us'
@@ -195,17 +148,16 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-
-# ─── Static & Media files ────────────────────────────────────────────────────
+# ─── Static Files & WhiteNoise ───────────────────────────────────────────────
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'              # collectstatic output
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'frontend' / 'dist',                  # Vite production build
-]
+    BASE_DIR / 'frontend' / 'dist',
+] if (BASE_DIR / 'frontend' / 'dist').exists() else []
 
-# WhiteNoise compressed + forever-cacheable static files
+# WhiteNoise compressed manifest static storage
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
@@ -218,8 +170,7 @@ STORAGES = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-
-# ─── Cache (rate limiting counters) ──────────────────────────────────────────
+# ─── Cache Configuration ─────────────────────────────────────────────────────
 
 _redis_url = os.getenv('REDIS_URL')
 if _redis_url:
@@ -240,8 +191,7 @@ else:
         }
     }
 
-
-# ─── Django Rest Framework ───────────────────────────────────────────────────
+# ─── Django REST Framework ───────────────────────────────────────────────────
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -254,7 +204,6 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
-    # Rate limiting / throttling
     'DEFAULT_THROTTLE_CLASSES': [
         'onlineapplicationapi.throttles.UserBurstRateThrottle',
         'onlineapplicationapi.throttles.UserSustainedRateThrottle',
@@ -268,25 +217,23 @@ REST_FRAMEWORK = {
     },
 }
 
+# ─── Security & Production Headers ───────────────────────────────────────────
 
-# ─── Cookie / CSRF security & HTTPS Production Standards (D2) ───────────────
-
-CSRF_COOKIE_HTTPONLY = False         # Allow JavaScript to read CSRF token
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
 
 if not DEBUG:
-    # Production defaults to secure HTTPS with environment overrides
-    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True').lower() in ('true', '1', 'yes')
-    CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'True').lower() in ('true', '1', 'yes')
-    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True').lower() in ('true', '1', 'yes')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
     SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     USE_X_FORWARDED_HOST = True
     USE_X_FORWARDED_PORT = True
 else:
@@ -295,16 +242,15 @@ else:
     SESSION_COOKIE_SECURE = False
     SECURE_HSTS_SECONDS = 0
 
-# Multi-Factor Authentication (MFA) Settings (D3)
+# Multi-Factor Authentication (MFA) Settings
 MFA_ENABLED_FOR_CITIZENS = os.getenv('MFA_ENABLED_FOR_CITIZENS', 'False').lower() in ('true', '1', 'yes')
-MFA_OTP_EXPIRY_SECONDS = 600  # 10 minutes
+MFA_OTP_EXPIRY_SECONDS = 600
 MFA_MAX_ATTEMPTS = 5
-
 
 # ─── Email ───────────────────────────────────────────────────────────────────
 
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')  # Use Gmail App Password
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 
 if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
@@ -317,8 +263,7 @@ EMAIL_USE_TLS = True
 
 DEFAULT_FROM_EMAIL = f'Title Deeds One Stop Center <{EMAIL_HOST_USER or "onestop.titledeeds@gmail.com"}>'
 
-
-# ─── Logging (production-grade) ──────────────────────────────────────────────
+# ─── Logging ─────────────────────────────────────────────────────────────────
 
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,26 @@
+# Core Framework
+Django==5.2
+djangorestframework==3.16.1
+asgiref==3.8.1
+sqlparse==0.5.2
+tzdata==2024.2
+
+# Database & Storage
+dj-database-url==2.3.0
+psycopg2-binary==2.9.11
+whitenoise==6.8.2
+django-redis==5.4.0
+
+# Server & Deployment
+gunicorn==23.0.0
+python-dotenv==1.0.0
+
+# Supporting Utilities
+django-cors-headers==4.6.0
+django-crispy-forms==2.0
+pillow==11.2.1
+filelock==3.18.0
+distlib==0.3.9
+platformdirs==4.3.7
+virtualenv==20.30.0
+
