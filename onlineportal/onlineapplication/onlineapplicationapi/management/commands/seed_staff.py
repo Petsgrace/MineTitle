@@ -1,5 +1,5 @@
 """
-Management command to seed staff/officer users.
+Management command to seed staff/officer users according to Ministry specification.
 Usage:
   python manage.py seed_staff
 """
@@ -8,81 +8,144 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from onlineapplicationapi.models import StaffProfile
 
-STAFF_USERS = [
-    {'username': 'admin',             'email': 'admin@test.com',        'password': 'adminpassword', 'role': 'admin',       'first_name': 'Super',  'last_name': 'Admin',       'is_superuser': True},
-    {'username': 'accounts@test.com', 'email': 'accounts@test.com',  'password': 'test123',       'role': 'accounts',    'first_name': 'Jane',   'last_name': 'Accounts',    'is_superuser': False},
-    {'username': 'estates@test.com',  'email': 'estates@test.com',   'password': 'test123',       'role': 'estates',     'first_name': 'Bob',    'last_name': 'Estates',     'is_superuser': False},
-    {'username': 'lims@test.com',     'email': 'lims@test.com',      'password': 'test123',       'role': 'lims',        'first_name': 'John',   'last_name': 'LIMS',        'is_superuser': False},
-    {'username': 'zlc@test.com',      'email': 'zlc@test.com',       'password': 'test123',       'role': 'zlc',         'first_name': 'Alice',  'last_name': 'ZLC',         'is_superuser': False},
-    {'username': 'surveyor@test.com', 'email': 'surveyor@test.com',  'password': 'test123',       'role': 'surveyor',    'first_name': 'Tom',    'last_name': 'Surveyor',    'is_superuser': False},
-    {'username': 'valuation@test.com','email': 'valuation@test.com', 'password': 'test123',       'role': 'valuation',   'first_name': 'Sarah',  'last_name': 'Valuation',   'is_superuser': False},
-    {'username': 'director@test.com', 'email': 'director@test.com',  'password': 'test123',       'role': 'director',    'first_name': 'David',  'last_name': 'Director',    'is_superuser': False},
-    {'username': 'deeds@test.com',    'email': 'deeds@test.com',     'password': 'test123',       'role': 'deeds',       'first_name': 'Grace',  'last_name': 'Deeds',       'is_superuser': False},
+STAFF_ACCOUNTS = [
+    {
+        'role': 'admin',
+        'username': 'admin',
+        'email': 'admin@lands.gov.zw',
+        'first_name': 'System',
+        'last_name': 'Administrator',
+        'department': 'Executive Directorate',
+        'is_superuser': True,
+        'channels': ['LIMS Channel', 'Finance Channel', 'Survey Channel', 'Valuation Channel', 'Deeds Channel'],
+        'privileges': [
+            'endorse_clearances', 'reconcile_fees', 'audit_gps', 'appraise_valuation',
+            'issue_warrants', 'affix_seal', 'view_reports', 'view_audit_logs', 'manage_staff'
+        ]
+    },
+    {
+        'role': 'accounts',
+        'username': 'accounts',
+        'email': 'accounts@lands.gov.zw',
+        'first_name': 'Accounts',
+        'last_name': 'Officer',
+        'department': 'Finance & Accounts',
+        'is_superuser': False,
+        'channels': ['Finance Channel'],
+        'privileges': ['reconcile_fees', 'view_applications']
+    },
+    {
+        'role': 'estates',
+        'username': 'estate',
+        'email': 'estate@lands.gov.zw',
+        'first_name': 'Estates',
+        'last_name': 'Officer',
+        'department': 'Estates & Succession',
+        'is_superuser': False,
+        'channels': ['LIMS Channel'],
+        'privileges': ['endorse_clearances', 'view_applications']
+    },
+    {
+        'role': 'lims',
+        'username': 'lims',
+        'email': 'lims@lands.gov.zw',
+        'first_name': 'LIMS',
+        'last_name': 'Officer',
+        'department': 'Lands & Agriculture (LIMS)',
+        'is_superuser': False,
+        'channels': ['LIMS Channel'],
+        'privileges': ['endorse_clearances', 'audit_gps', 'view_applications']
+    },
+    {
+        'role': 'zlc',
+        'username': 'zlc',
+        'email': 'zlc@lands.gov.zw',
+        'first_name': 'ZLC',
+        'last_name': 'Officer',
+        'department': 'Zimbabwe Land Commission',
+        'is_superuser': False,
+        'channels': ['Survey Channel'],
+        'privileges': ['endorse_clearances', 'view_applications']
+    },
+    {
+        'role': 'surveyor_general',
+        'username': 'sg',
+        'email': 'sg@lands.gov.zw',
+        'first_name': 'Surveyor General',
+        'last_name': 'Officer',
+        'department': 'Surveyor General',
+        'is_superuser': False,
+        'channels': ['Survey Channel'],
+        'privileges': ['audit_gps', 'endorse_clearances', 'view_applications']
+    },
+    {
+        'role': 'valuation',
+        'username': 'valuation',
+        'email': 'valuation@lands.gov.zw',
+        'first_name': 'Valuation',
+        'last_name': 'Officer',
+        'department': 'Valuation Directorate',
+        'is_superuser': False,
+        'channels': ['Valuation Channel'],
+        'privileges': ['appraise_valuation', 'view_reports', 'view_applications']
+    },
 ]
 
 class Command(BaseCommand):
-    help = 'Seed the database with staff/officer users for all roles.'
+    help = 'Seed official Ministry staff accounts with initial temporary password Ministry.'
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.MIGRATE_HEADING('Seeding staff users...'))
-        self.stdout.write('-' * 50)
+        self.stdout.write(self.style.MIGRATE_HEADING('Seeding Ministry staff accounts...'))
+        self.stdout.write('-' * 60)
 
         created_count = 0
         updated_count = 0
 
-        for data in STAFF_USERS:
-            user, created = User.objects.get_or_create(
-                username=data['username'],
-                defaults={
-                    'email': data['email'],
-                    'first_name': data['first_name'],
-                    'last_name': data['last_name'],
-                    'is_staff': True,
-                    'is_superuser': data['is_superuser'],
-                }
-            )
+        for data in STAFF_ACCOUNTS:
+            # Query by username or email
+            user = User.objects.filter(username=data['username']).first()
+            if not user:
+                user = User.objects.filter(email__iexact=data['email']).first()
 
-            # Set known password
-            user.set_password(data['password'])
+            is_new = False
+            if not user:
+                user = User(username=data['username'])
+                is_new = True
+
+            user.username = data['username']
             user.email = data['email']
             user.first_name = data['first_name']
             user.last_name = data['last_name']
             user.is_staff = True
             user.is_active = True
             user.is_superuser = data['is_superuser']
+            user.set_password('Ministry')
             user.save()
 
-            # Create or update StaffProfile
-            profile, profile_created = StaffProfile.objects.get_or_create(
-                user=user,
-                defaults={
-                    'role': data['role'],
-                    'department': f"{data['role'].capitalize()} Department",
-                    'privileges': ['view_applications', 'verify_documents', 'commit_workflow']
-                }
-            )
-            if profile.role != data['role']:
-                profile.role = data['role']
-                profile.department = f"{data['role'].capitalize()} Department"
-                profile.privileges = ['view_applications', 'verify_documents', 'commit_workflow']
-                profile.save()
+            profile, _ = StaffProfile.objects.get_or_create(user=user)
+            profile.role = data['role']
+            profile.department = data['department']
+            profile.channels = data['channels']
+            profile.privileges = data['privileges']
+            profile.must_change_password = True
+            profile.mfa_enabled = True
+            profile.failed_login_attempts = 0
+            profile.locked_until = None
+            profile.save()
 
-            if created:
+            if is_new:
                 created_count += 1
                 self.stdout.write(self.style.SUCCESS(
-                    f"  [+] Created {data['role'].upper()} user: {data['username']}"
+                    f"  [+] Created {data['role'].upper():12s} user: '{data['username']}' ({data['email']})"
                 ))
             else:
                 updated_count += 1
                 self.stdout.write(self.style.WARNING(
-                    f"  [*] Updated {data['role'].upper()} user: {data['username']}"
+                    f"  [*] Updated {data['role'].upper():12s} user: '{data['username']}' ({data['email']})"
                 ))
 
-        self.stdout.write('-' * 50)
+        self.stdout.write('-' * 60)
         self.stdout.write(self.style.SUCCESS(
-            f'Done! Created: {created_count}, Updated: {updated_count}'
+            f'Seeding complete! Created: {created_count}, Updated: {updated_count}'
         ))
-        self.stdout.write('')
-        self.stdout.write('Login credentials:')
-        for data in STAFF_USERS:
-            self.stdout.write(f"  {data['role'].upper():15s} -> {data['username']} / {data['password']}")
+        self.stdout.write('All accounts reset to temporary password: "Ministry" (must change on first login)')

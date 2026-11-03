@@ -402,6 +402,35 @@ class UserService {
         }
     }
 
+    async resetPassword(userId) {
+        const response = await api.post(`/admin/staff/${userId}/reset-password/`)
+        recordLocalAuditLog({
+            action_type: 'PASSWORD_RESET',
+            reference_number: 'STAFF-IAM',
+            actor: 'System Administrator',
+            stage: 'ADMIN_IAM',
+            comment: `Reset password for staff ID ${userId} to temporary default 'Ministry'. Change required on next login.`
+        })
+        return response.data
+    }
+
+    async toggleMfa(userId) {
+        const response = await api.post(`/admin/staff/${userId}/toggle-mfa/`)
+        recordLocalAuditLog({
+            action_type: 'MFA_TOGGLE',
+            reference_number: 'STAFF-IAM',
+            actor: 'System Administrator',
+            stage: 'ADMIN_IAM',
+            comment: `Toggled MFA for staff ID ${userId}.`
+        })
+        return response.data
+    }
+
+    async fetchOversight() {
+        const response = await api.get('/admin/staff/oversight/')
+        return response.data
+    }
+
     _syncActiveUserSession(updatedUser) {
         try {
             const currentRaw = localStorage.getItem('user')

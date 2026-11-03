@@ -356,15 +356,40 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsOfficerOrAdmin])
     def verify_lims(self, request, pk=None):
         """LIMS verification: Check if farm exists in DB."""
+        role = getattr(getattr(request.user, 'staff_profile', None), 'role', '')
+        if not (request.user.is_superuser or role in ('lims', 'admin')):
+            return Response({'error': 'Unauthorized: Only LIMS Officers may perform cadastral/biometric verification.'}, status=status.HTTP_403_FORBIDDEN)
+
         from .services.verification_service import VerificationService
-        
         application = self.get_object()
+        status_action = (request.data.get('status_action') or 'VERIFIED').upper()
+        comments = request.data.get('officer_comments') or request.data.get('comments') or request.data.get('reason') or ''
+
+        if status_action == 'NOT_VERIFIED':
+            application.is_queried = True
+            application.query_message = comments or "Discrepancy identified during LIMS verification. Contact office."
+            application.queried_by = 'lims'
+            application.rejection_reason = application.query_message
+            application.status = 'LIMS_VERIFIED'
+            application.save()
+            from .services.email_service import EmailService
+            EmailService.send_lims_query(application, application.query_message)
+            ApplicationAction.objects.create(
+                application=application,
+                officer=request.user,
+                from_stage='ESTATES_CLEARED',
+                to_stage='LIMS_VERIFIED',
+                action_type='LIMS_QUERY_ISSUED',
+                comment=f"LIMS Discrepancy Flagged: {application.query_message}. File released to ZLC under conditional lock."
+            )
+            return Response({'status': 'LIMS query recorded and released to ZLC under conditional lock', 'is_queried': True})
+
         result = VerificationService.verify_lims(
             application=application,
-            status_action=request.data.get('status_action'),
+            status_action=status_action,
             reason=request.data.get('reason'),
             officer=request.user,
-            comments=request.data.get('officer_comments')
+            comments=comments
         )
         return Response(result)
 
@@ -376,6 +401,10 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='verify_surveyor', permission_classes=[IsOfficerOrAdmin])
     def verify_surveyor(self, request, pk=None):
         """SURVEYOR GENERAL: Validate cadastral survey diagram and boundaries."""
+        role = getattr(getattr(request.user, 'staff_profile', None), 'role', '')
+        if not (request.user.is_superuser or role in ('surveyor', 'surveyor_general', 'sg', 'gis', 'admin')):
+            return Response({'error': 'Unauthorized: Only Surveyor General Officers may commit survey endorsements.'}, status=status.HTTP_403_FORBIDDEN)
+
         application = self.get_object()
         action_type = (request.data.get('action_type') or 'SURVEYED').upper()
         comments = request.data.get('comments') or request.data.get('officer_comments') or ''
@@ -384,10 +413,14 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
         if action_type in ('NOT_SURVEYED', 'REQUIRE_SURVEY'):
             application.status = 'NOT_SURVEYED'
             application.is_surveyed = False
+            application.farm_survey_status = 'REQUIRES_OFFICE_VISIT'
+            application.query_message = "Please visit the Surveyor General's Office to complete your cadastral survey verification."
             log_type = 'SURVEY_REQUIRED_NOTIFIED'
-            note = comments or "Parcel requires technical cadastral survey. Notification dispatched to applicant."
+            note = comments or "Parcel requires technical cadastral survey. Notification dispatched to applicant to visit SG office."
         elif action_type in ('UNAVAILABLE', 'STATUS_UNAVAILABLE'):
             application.status = 'SURVEY_UNAVAILABLE'
+            application.farm_survey_status = 'STATUS_UNAVAILABLE'
+            application.query_message = "Survey records status currently unavailable. Please visit the Surveyor General's Office."
             log_type = 'SURVEY_STATUS_UNAVAILABLE'
             note = comments or "Survey records status currently unavailable."
         else:
@@ -413,8 +446,11 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsOfficerOrAdmin])
     def verify_application_fee(self, request, pk=None):
         """ACCOUNTS: Verify $10 Application Fee"""
+        role = getattr(getattr(request.user, 'staff_profile', None), 'role', '')
+        if not (request.user.is_superuser or role in ('accounts', 'admin')):
+            return Response({'error': 'Unauthorized: Only Accounts Officers may verify application fees.'}, status=status.HTTP_403_FORBIDDEN)
+
         from .services.verification_service import VerificationService
-        
         application = self.get_object()
         result = VerificationService.verify_application_fee(
             application=application,
@@ -427,14 +463,36 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[IsOfficerOrAdmin])
     def verify_estates(self, request, pk=None):
-        """ESTATES: Ensure farmer details are correct."""
+        """ESTATES: Ensure farmer details and tenure documents are correct."""
+        role = getattr(getattr(request.user, 'staff_profile', None), 'role', '')
+        if not (request.user.is_superuser or role in ('estates', 'resettlement', 'admin')):
+            return Response({'error': 'Unauthorized: Only Estates Officers may review and clear tenure documents.'}, status=status.HTTP_403_FORBIDDEN)
+
         from .services.verification_service import VerificationService
-        
         application = self.get_object()
+        action_type = (request.data.get('action_type') or 'CLEAR').upper()
+        comments = request.data.get('officer_comments') or request.data.get('comments') or ''
+
+        if action_type in ('QUERY', 'NOT_CLEARED'):
+            application.is_queried = True
+            application.query_message = comments or "Estates Officer requested clarification on tenure documentation."
+            application.rejection_reason = application.query_message
+            application.queried_by = 'estates'
+            application.save()
+            ApplicationAction.objects.create(
+                application=application,
+                officer=request.user,
+                from_stage=application.status,
+                to_stage=application.status,
+                action_type='ESTATES_QUERIED',
+                comment=f"Estates Query Logged: {application.query_message}"
+            )
+            return Response({'status': 'Estates query recorded', 'is_queried': True})
+
         result = VerificationService.verify_estates(
             application=application,
             officer=request.user,
-            comments=request.data.get('officer_comments')
+            comments=comments
         )
         if 'error' in result:
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
@@ -455,6 +513,9 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsOfficerOrAdmin])
     def verify_zlc(self, request, pk=None):
         """ZLC: Check for disputes."""
+        role = getattr(getattr(request.user, 'staff_profile', None), 'role', '')
+        if not (request.user.is_superuser or role in ('zlc', 'admin')):
+            return Response({'error': 'Unauthorized: Only ZLC Officers may verify disputes and gazette records.'}, status=status.HTTP_403_FORBIDDEN)
         from .services.verification_service import VerificationService
         
         application = self.get_object()
@@ -574,6 +635,9 @@ class TitleDeedApplicationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[IsOfficerOrAdmin])
     def set_valuation(self, request, pk=None):
+        role = getattr(getattr(request.user, 'staff_profile', None), 'role', '')
+        if not (request.user.is_superuser or role in ('valuation', 'admin')):
+            return Response({'error': 'Unauthorized: Only Valuation Officers may calculate and commit valuations.'}, status=status.HTTP_403_FORBIDDEN)
         application = self.get_object()
         if application.has_disputes or application.has_double_allocation or application.status in ('ZLC_DISPUTED', 'ZLC_DOUBLE_ALLOCATION'):
             return Response(
@@ -784,7 +848,12 @@ Title Deeds One Stop Center"""
 
     @action(detail=True, methods=['post'], permission_classes=[IsOfficerOrAdmin])
     def final_approve(self, request, pk=None):
+        role = getattr(getattr(request.user, 'staff_profile', None), 'role', '')
+        if not (request.user.is_superuser or role in ('director', 'deeds', 'admin')):
+            return Response({'error': 'Unauthorized: Only Director of Lands or Deeds Registrar may grant final approval.'}, status=status.HTTP_403_FORBIDDEN)
         application = self.get_object()
+        if application.has_disputes or application.has_double_allocation or getattr(application, 'is_queried', False):
+            return Response({'error': 'Title deed issuance is strictly locked: active ZLC dispute, double allocation, or unresolved query exists.'}, status=status.HTTP_403_FORBIDDEN)
         application.status = 'APPROVED'
         comments = request.data.get('officer_comments')
         if comments:
@@ -798,7 +867,12 @@ Title Deeds One Stop Center"""
         """
         Director concludes application and notifies farmer to collect Title Deeds.
         """
+        role = getattr(getattr(request.user, 'staff_profile', None), 'role', '')
+        if not (request.user.is_superuser or role in ('director', 'deeds', 'admin')):
+            return Response({'error': 'Unauthorized: Only Director of Lands, Deeds Registrar, or Administrator may conclude application.'}, status=status.HTTP_403_FORBIDDEN)
         application = self.get_object()
+        if application.has_disputes or application.has_double_allocation or getattr(application, 'is_queried', False):
+            return Response({'error': 'Title deed issuance is strictly locked: active ZLC dispute, double allocation, or unresolved query exists.'}, status=status.HTTP_403_FORBIDDEN)
         comments = request.data.get('officer_comments', '')
         
         if comments:
@@ -1298,6 +1372,75 @@ from django.contrib.auth import authenticate, login
 from rest_framework.views import APIView
 
 from .utils.id_utils import format_national_id
+from .authentication import generate_signed_token, SignedTokenAuthentication
+
+
+class ChangePasswordView(APIView):
+    """
+    Enforces mandatory first-login password change for officers and administrators.
+    The new password must be at least 8 characters long, contain letters and numbers,
+    and must not be the default temporary password 'Ministry'.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get('old_password') or request.data.get('current_password')
+        new_password = (request.data.get('new_password') or '').strip()
+        confirm_password = (request.data.get('confirm_password') or '').strip()
+
+        if not old_password or not new_password:
+            return Response({'error': 'Current password and new password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.check_password(old_password):
+            return Response({'error': 'Current password is incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_password.lower() == 'ministry':
+            return Response({'error': 'New password must not be the temporary default password.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if confirm_password and new_password != confirm_password:
+            return Response({'error': 'New password and confirmation do not match.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(new_password) < 8 or not any(c.isalpha() for c in new_password) or not any(c.isdigit() for c in new_password):
+            return Response({'error': 'New password must be at least 8 characters long and contain both letters and numbers.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+
+        profile = getattr(user, 'staff_profile', None)
+        if profile:
+            profile.must_change_password = False
+            profile.save()
+
+        # Update session auth hash so session doesn't invalidate
+        from django.contrib.auth import update_session_auth_hash
+        update_session_auth_hash(request, user)
+
+        # Audit log entry
+        try:
+            from .models import ApplicationAction, TitleDeedApplication
+            app = TitleDeedApplication.objects.first()
+            if app:
+                ApplicationAction.objects.create(
+                    application=app,
+                    officer=user,
+                    from_stage=app.status,
+                    to_stage=app.status,
+                    action_type='PASSWORD_CHANGED',
+                    comment=f"Officer @{user.username} successfully changed their temporary password."
+                )
+        except Exception as e:
+            print("Password change audit log warning:", e)
+
+        role = getattr(profile, 'role', 'admin' if user.is_superuser else 'farmer')
+        new_token = generate_signed_token(user, role=role, privileges=getattr(profile, 'privileges', []))
+
+        return Response({
+            'status': 'Password changed successfully',
+            'token': new_token,
+            'must_change_password': False
+        }, status=status.HTTP_200_OK)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
@@ -1306,164 +1449,174 @@ class LoginView(APIView):
     throttle_classes = [LoginRateThrottle]
     
     def post(self, request):
+        from django.core.cache import cache
+        import hashlib
+        
         raw_username = (request.data.get('username') or '').strip()
-        password = request.data.get('password')
+        password = request.data.get('password') or ''
         mfa_code = request.data.get('mfa_code')
         
-        # Support login by Email, National ID, or Standard Username
-        username = raw_username
-        if raw_username and '@' in raw_username:
-            user_by_email = User.objects.filter(email__iexact=raw_username).first()
-            if not user_by_email:
-                from .models import FarmerProfile
-                prof = FarmerProfile.objects.filter(email__iexact=raw_username).first()
-                if prof and prof.user:
-                    user_by_email = prof.user
-            if user_by_email:
-                username = user_by_email.username
-        elif raw_username:
-            formatted_id = format_national_id(raw_username)
-            if User.objects.filter(username__iexact=formatted_id).exists():
-                username = formatted_id
-            elif User.objects.filter(username__iexact=raw_username).exists():
-                username = raw_username
-            else:
-                from .models import FarmerProfile
-                prof = FarmerProfile.objects.filter(national_id__iexact=formatted_id).first()
-                if not prof:
-                    prof = FarmerProfile.objects.filter(national_id__iexact=raw_username).first()
-                if prof and prof.user:
-                    username = prof.user.username
-                else:
-                    username = formatted_id
+        if not raw_username or not password:
+            return Response({'error': 'Invalid username or password.'}, status=status.HTTP_401_UNAUTHORIZED)
             
-        user = authenticate(username=username, password=password)
+        cache_key = f"login_attempts_{raw_username.lower()}"
+        lockout_key = f"login_lockout_{raw_username.lower()}"
+        if cache.get(lockout_key):
+            return Response({'error': 'Too many failed login attempts. Locked out for 15 minutes.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        # 1. Resolve user by Email or Username (case-insensitive)
+        resolved_user = User.objects.filter(username__iexact=raw_username).first()
+        if not resolved_user:
+            resolved_user = User.objects.filter(email__iexact=raw_username).first()
+        if not resolved_user and '@' not in raw_username:
+            from .utils.id_utils import format_national_id
+            fmt_id = format_national_id(raw_username)
+            resolved_user = User.objects.filter(username__iexact=fmt_id).first()
+            if not resolved_user:
+                from .models import FarmerProfile
+                prof = FarmerProfile.objects.filter(national_id__iexact=fmt_id).first()
+                if prof and prof.user:
+                    resolved_user = prof.user
+
+        # 2. Check if user is deactivated
+        if resolved_user and not resolved_user.is_active:
+            return Response({'error': 'Account deactivated by System Administrator.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # 3. Authenticate password case-sensitively
+        username_for_auth = resolved_user.username if resolved_user else raw_username
+        user = authenticate(username=username_for_auth, password=password)
+        
         if not user:
-            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # Determine role: farmers are NOT staff, officers/admins are staff
-        if user.is_staff:
+            attempts = cache.get(cache_key, 0) + 1
+            if attempts >= 5:
+                cache.set(lockout_key, True, timeout=900)
+                cache.delete(cache_key)
+            else:
+                cache.set(cache_key, attempts, timeout=900)
+                
             try:
-                role = user.staff_profile.role
-            except Exception as e:
-                role = 'admin'
-        else:
-            role = 'farmer'
-
-        # Multi-Factor Authentication (MFA) - D3 (Staff required, Citizen optional)
-        from django.conf import settings
-        mfa_required_for_user = user.is_staff or getattr(settings, 'MFA_ENABLED_FOR_CITIZENS', False)
-        if mfa_required_for_user:
-            from django.core.cache import cache
-            import hashlib
+                from .models import ApplicationAction, TitleDeedApplication
+                app = TitleDeedApplication.objects.first()
+                if app:
+                    ApplicationAction.objects.create(
+                        application=app,
+                        officer=resolved_user if resolved_user else User.objects.filter(is_superuser=True).first(),
+                        from_stage=app.status,
+                        to_stage=app.status,
+                        action_type='LOGIN_FAILED',
+                        comment=f"Failed login attempt for identifier '{raw_username}' (Attempt {attempts}/5)."
+                    )
+            except Exception:
+                pass
+                
+            return Response({'error': 'Invalid username or password.'}, status=status.HTTP_401_UNAUTHORIZED)
             
-            attempt_key = f"mfa_attempts_{user.id}"
+        cache.delete(cache_key)
+        cache.delete(lockout_key)
+        
+        profile = getattr(user, 'staff_profile', None)
+        role = getattr(profile, 'role', 'admin' if user.is_superuser else 'farmer')
+        
+        # 4. MFA Step (for officers/staff by default)
+        mfa_required = (user.is_staff and getattr(profile, 'mfa_enabled', True))
+        if mfa_required:
             otp_key = f"mfa_hashed_otp_{user.id}"
-            
-            # Rate-limit failed verification attempts: lockout after 5 attempts
-            attempts = cache.get(attempt_key, 0)
-            if attempts >= getattr(settings, 'MFA_MAX_ATTEMPTS', 5):
-                return Response(
-                    {'error': 'Too many failed MFA verification attempts. Locked out for 15 minutes.'},
-                    status=status.HTTP_429_TOO_MANY_REQUESTS
-                )
-
-            # If mfa_code is submitted, verify against hashed OTP
+            attempt_key = f"mfa_attempts_{user.id}"
+            mfa_attempts = cache.get(attempt_key, 0)
+            if mfa_attempts >= 5:
+                return Response({'error': 'Too many failed MFA verification attempts. Locked out for 15 minutes.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+                
             if mfa_code:
                 cached_hash = cache.get(otp_key)
                 code_hash = hashlib.sha256(f"{user.id}:{mfa_code.strip()}:{settings.SECRET_KEY}".encode()).hexdigest()
-                
                 is_valid_test = (settings.DEBUG or getattr(settings, 'TESTING', False)) and mfa_code.strip() == '123456'
                 if (cached_hash and code_hash == cached_hash) or is_valid_test:
                     cache.delete(otp_key)
                     cache.delete(attempt_key)
-                    # MFA verified! Proceed to login below
                 else:
-                    cache.set(attempt_key, attempts + 1, timeout=900)
+                    cache.set(attempt_key, mfa_attempts + 1, timeout=900)
                     return Response({'error': 'Invalid or expired MFA security code.'}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 import random
                 from .services.email_service import EmailService
                 otp = f"{random.randint(100000, 999999)}"
-                # D3: Store OTP hashed with 10-minute expiry (600 seconds)
                 hashed_otp = hashlib.sha256(f"{user.id}:{otp}:{settings.SECRET_KEY}".encode()).hexdigest()
-                cache.set(otp_key, hashed_otp, timeout=getattr(settings, 'MFA_OTP_EXPIRY_SECONDS', 600))
+                cache.set(otp_key, hashed_otp, timeout=600)
                 cache.set(attempt_key, 0, timeout=600)
                 
                 officer_name = f"{user.first_name} {user.last_name}".strip() or role
                 if user.email:
                     EmailService.send_mfa_otp(user.email, officer_name, otp)
-                
+                    
                 masked_email = f"{user.email[:2]}***@{user.email.split('@')[-1]}" if user.email and '@' in user.email else "user@lands.gov.zw"
-                
                 resp_payload = {
                     'mfa_required': True,
                     'username': user.username,
                     'email_masked': masked_email,
-                    'message': 'Multi-Factor Authentication required. A 6-digit security OTP has been dispatched to your email (expires in 10 minutes).'
+                    'message': f'Multi-Factor Authentication required. A 6-digit security OTP has been dispatched to {masked_email} (expires in 10 minutes).'
                 }
                 if settings.DEBUG or getattr(settings, 'TESTING', False):
                     resp_payload['dev_otp'] = otp
-                    
                 return Response(resp_payload, status=status.HTTP_200_OK)
-            
+
         login(request, user)
-        name = f"{user.first_name} {user.last_name}".strip()
-        if not name:
-            name = user.username
-            
-        national_id = getattr(getattr(user, 'farmer_profile', None), 'national_id', None) or user.username
-            
-        profile = getattr(user, 'staff_profile', None)
+        token = generate_signed_token(user, role=role, privileges=getattr(profile, 'privileges', []))
+        name = f"{user.first_name} {user.last_name}".strip() or user.username
+        must_change_password = getattr(profile, 'must_change_password', False)
+        
         return Response({
             'name': name,
             'first_name': user.first_name,
             'last_name': user.last_name,
             'role': role,
             'username': user.username,
-            'national_id': national_id,
+            'email': user.email,
             'department': getattr(profile, 'department', '') or '',
             'channels': getattr(profile, 'channels', []) or [],
-            'privileges': getattr(profile, 'privileges', []) or []
+            'privileges': getattr(profile, 'privileges', []) or [],
+            'is_active': user.is_active,
+            'must_change_password': must_change_password,
+            'token': token
         })
+
 
 class CheckSessionView(APIView):
     permission_classes = [permissions.AllowAny]
     throttle_classes = [AnonBurstRateThrottle]
     
     def get(self, request):
-        """Check if user has an active session and return user data"""
+        if not (request.user and request.user.is_authenticated):
+            auth = SignedTokenAuthentication()
+            auth_res = auth.authenticate(request)
+            if auth_res:
+                request.user = auth_res[0]
+
         if request.user and request.user.is_authenticated:
-            # Determine role: farmers are NOT staff, officers/admins are staff  
-            if request.user.is_staff:
-                try:
-                    role = request.user.staff_profile.role
-                except Exception:
-                    # Staff user without profile defaults to admin
-                    role = 'admin'
-            else:
-                # Regular users are farmers
-                role = 'farmer'
-            
-            name = f"{request.user.first_name} {request.user.last_name}".strip()
-            if not name:
-                name = request.user.username
-                
-            national_id = getattr(getattr(request.user, 'farmer_profile', None), 'national_id', None) or request.user.username
+            if not request.user.is_active:
+                return Response({'error': 'Account deactivated by System Administrator.'}, status=status.HTTP_403_FORBIDDEN)
                 
             profile = getattr(request.user, 'staff_profile', None)
+            role = getattr(profile, 'role', 'admin' if request.user.is_superuser else 'farmer')
+            token = generate_signed_token(request.user, role=role, privileges=getattr(profile, 'privileges', []))
+            name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+            
             return Response({
                 'name': name,
                 'first_name': request.user.first_name,
                 'last_name': request.user.last_name,
                 'role': role,
                 'username': request.user.username,
-                'national_id': national_id,
+                'email': request.user.email,
                 'department': getattr(profile, 'department', '') or '',
                 'channels': getattr(profile, 'channels', []) or [],
-                'privileges': getattr(profile, 'privileges', []) or []
+                'privileges': getattr(profile, 'privileges', []) or [],
+                'is_active': request.user.is_active,
+                'must_change_password': getattr(profile, 'must_change_password', False),
+                'token': token
             })
+            
         return Response({'error': 'No active session'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 class LogoutView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -1526,16 +1679,83 @@ class AdminStaffViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print("Failed to record privilege audit:", e)
     
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        role = getattr(getattr(request.user, 'staff_profile', None), 'role', '')
+        if not (request.user.is_superuser or role == 'admin'):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('Administrator privileges required.')
+
     @action(detail=True, methods=['post'])
     def toggle_active(self, request, pk=None):
         """Toggle the is_active status of a staff user"""
         user = self.get_object()
         user.is_active = not user.is_active
         user.save()
+        self._record_privilege_audit(user, "MODIFY", f"Toggled active status to {user.is_active}")
         serializer = self.get_serializer(user)
         return Response({
             'message': f'User {user.username} is now {"active" if user.is_active else "inactive"}',
             'user': serializer.data
+        })
+
+    @action(detail=True, methods=['post'], url_path='reset-password')
+    def reset_password(self, request, pk=None):
+        """Reset a staff officer password to initial temporary 'Ministry' and set must_change_password=True"""
+        user = self.get_object()
+        user.set_password('Ministry')
+        user.save()
+        profile = getattr(user, 'staff_profile', None)
+        if profile:
+            profile.must_change_password = True
+            profile.save()
+        self._record_privilege_audit(user, "RESET_PASSWORD", "Reset officer password to temporary 'Ministry' (must change on next login)")
+        return Response({'message': f"Password for officer @{user.username} has been reset to temporary 'Ministry'. Password change required on next login."})
+
+    @action(detail=True, methods=['post'], url_path='toggle-mfa')
+    def toggle_mfa(self, request, pk=None):
+        """Toggle MFA enforcement for a staff account"""
+        user = self.get_object()
+        profile, _ = StaffProfile.objects.get_or_create(user=user)
+        profile.mfa_enabled = not profile.mfa_enabled
+        profile.save()
+        self._record_privilege_audit(user, "TOGGLE_MFA", f"Toggled MFA to {profile.mfa_enabled}")
+        return Response({
+            'message': f"MFA for @{user.username} is now {'enabled' if profile.mfa_enabled else 'disabled'}.",
+            'mfa_enabled': profile.mfa_enabled
+        })
+
+    @action(detail=False, methods=['get'], url_path='oversight')
+    def oversight(self, request):
+        """Admin & Director read-only oversight: counts per stage, SLA overdue files (> 3 days), staff count"""
+        from django.db.models import Count
+        from django.utils import timezone
+        from datetime import timedelta
+        from .models import TitleDeedApplication
+
+        stage_counts = dict(
+            TitleDeedApplication.objects.values('status')
+            .annotate(total=Count('id'))
+            .values_list('status', 'total')
+        )
+        overdue_cutoff = timezone.now() - timedelta(days=3)
+        overdue_count = TitleDeedApplication.objects.exclude(
+            status__in=['APPROVED', 'READY_FOR_COLLECTION']
+        ).filter(updated_at__lt=overdue_cutoff).count()
+
+        total_apps = TitleDeedApplication.objects.count()
+        active_staff = User.objects.filter(is_staff=True, is_active=True).count()
+        disputed_count = TitleDeedApplication.objects.filter(has_disputes=True).count()
+        queried_count = TitleDeedApplication.objects.filter(is_queried=True).count()
+
+        return Response({
+            'stage_counts': stage_counts,
+            'overdue_count': overdue_count,
+            'total_applications': total_apps,
+            'active_staff': active_staff,
+            'disputed_count': disputed_count,
+            'queried_count': queried_count,
+            'sla_target_days': 3
         })
 
 class ReportViewSet(viewsets.ViewSet):

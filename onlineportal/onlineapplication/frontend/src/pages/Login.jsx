@@ -112,6 +112,9 @@ const Login = ({ setUser }) => {
             }
 
             const userData = response.data
+            if (userData.token) {
+                localStorage.setItem('authToken', userData.token)
+            }
             if (isNativePlatform && (userData.role !== 'farmer' || role === 'officer')) {
                 setError('Officers must sign in using the web page.')
                 setIsLoading(false)
@@ -119,7 +122,12 @@ const Login = ({ setUser }) => {
             }
             if (setUser) setUser(userData)
             localStorage.setItem('user', JSON.stringify(userData))
-            
+
+            if (userData.must_change_password) {
+                navigate('/change-password')
+                return
+            }
+
             if (role === 'officer' || userData.role !== 'farmer') {
                 localStorage.setItem('admin_user', JSON.stringify(userData))
                 routeByRole(userData.role || selectedDept.id)
@@ -128,39 +136,14 @@ const Login = ({ setUser }) => {
             }
         } catch (err) {
             console.error('Login error:', err)
-                        // Fallback for demo / offline credentials (Beneficiary or Officer)
-            const fallbackUser = role === 'officer' ? {
-                id: `officer-${selectedDept.id}`,
-                name: `${selectedDept.name} Officer`,
-                username: credentials.username || selectedDept.email,
-                email: selectedDept.email,
-                role: selectedDept.id,
-                department: selectedDept.title
-            } : {
-                id: 'farmer-local',
-                name: credentials.username || 'Beneficiary Applicant',
-                username: credentials.username || 'farmer@gmail.com',
-                email: credentials.username?.includes('@') ? credentials.username : 'farmer@gmail.com',
-                role: 'farmer',
-                department: 'Land Beneficiary'
-            };
-
-            if (setUser) setUser(fallbackUser);
-            localStorage.setItem('user', JSON.stringify(fallbackUser));
-            if (role === 'officer') {
-                localStorage.setItem('admin_user', JSON.stringify(fallbackUser));
-                routeByRole(selectedDept.id);
-            } else {
-                navigate('/dashboard');
-            }
-            return;
-
             if (err.response?.status === 429) {
-                const retryAfter = err.response.headers['retry-after']
-                const waitText = retryAfter ? `Please wait ${retryAfter} seconds` : 'Please wait a moment'
-                setError(`Too many login attempts. ${waitText} and try again.`)
+                const retryAfter = err.response.headers?.['retry-after']
+                const waitText = retryAfter ? `Please wait ${retryAfter} seconds` : 'Please wait 15 minutes'
+                setError(err.response?.data?.error || `Too many login attempts. ${waitText} and try again.`)
+            } else if (err.response?.status === 403) {
+                setError(err.response?.data?.error || 'Account deactivated by System Administrator.')
             } else {
-                setError(err.response?.data?.error || 'Login failed. Please check your credentials.')
+                setError(err.response?.data?.error || 'Invalid username or password.')
             }
         } finally {
             setIsLoading(false)

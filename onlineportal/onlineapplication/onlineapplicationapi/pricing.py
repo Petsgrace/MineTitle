@@ -34,24 +34,25 @@ def calculate_land_class(arable_area, total_area):
 
 def get_civil_servant_discount(years: int) -> Decimal:
     """
-    Tiered civil servant discount based on years of service (serving or retired).
-    Ref: 20 April 2026 Directive:
-      > 40 years: 30%
-      > 20 years: 20%
-      > 10 years: 10%
-      > 5 years:  5%
+    Tiered civil servant discount based on years of service with linear interpolation:
+      >= 40 years: 30%
+      20 to 39 years: linear interpolation from 5.0% to 15.0%
+      10 to 19 years: linear interpolation from 2.5% to 5.0%
+      5 to 9 years: 2.5%
+      < 5 years: 0%
     """
-    if not years:
+    if not years or years < 5:
         return Decimal('0')
-    if years > 40:
+    if years >= 40:
         return Decimal('30')
-    elif years > 20:
-        return Decimal('20')
-    elif years > 10:
-        return Decimal('10')
-    elif years > 5:
-        return Decimal('5')
-    return Decimal('0')
+    elif years >= 20:
+        pct = 5.0 + (years - 20) * (15.0 - 5.0) / (39 - 20)
+        return Decimal(str(round(pct, 2)))
+    elif years >= 10:
+        pct = 2.5 + (years - 10) * (5.0 - 2.5) / (19 - 10)
+        return Decimal(str(round(pct, 2)))
+    else:
+        return Decimal('2.5')
 
 
 def extract_person_discounts(person, source_label: str) -> list:

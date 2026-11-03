@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import {
     UserPlus, Users, Shield, Search, Eye, EyeOff, CheckCircle,
     Briefcase, User as UserIcon, AlertCircle, Pencil,
-    LayoutDashboard, Lock, Power, Trash2, Loader2
+    LayoutDashboard, Lock, Power, Trash2, Loader2, KeyRound,
+    ShieldCheck, Clock, Activity, FileCheck
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import Modal from '../components/Modal'
@@ -125,8 +126,65 @@ const AdminDashboard = ({ user }) => {
         createUser,
         updateUser,
         deleteUser,
-        toggleActive
+        toggleActive,
+        resetPassword,
+        toggleMfa,
+        fetchOversight
     } = useUsers()
+
+    const [oversightData, setOversightData] = useState(null)
+    const [oversightLoading, setOversightLoading] = useState(false)
+
+    const loadOversight = async () => {
+        setOversightLoading(true)
+        try {
+            const data = await fetchOversight()
+            setOversightData(data)
+        } catch (e) {
+            console.warn('Oversight data error:', e)
+        } finally {
+            setOversightLoading(false)
+        }
+    }
+
+    React.useEffect(() => {
+        loadOversight()
+    }, [])
+
+    const handleResetPassword = async (userItem) => {
+        if (!window.confirm(`Reset password for @${userItem.username} to temporary default 'Ministry'? They will be required to set a new password on their next login.`)) {
+            return
+        }
+        setActionUserId(userItem.id)
+        setError('')
+        try {
+            const res = await resetPassword(userItem.id)
+            setSuccessMessage(res?.message || `Password for @${userItem.username} reset to 'Ministry'.`)
+            setTimeout(() => setSuccessMessage(''), 4500)
+        } catch (err) {
+            console.error('Reset password error:', err)
+            setError(err.response?.data?.error || 'Failed to reset officer password.')
+            setTimeout(() => setError(''), 4500)
+        } finally {
+            setActionUserId(null)
+        }
+    }
+
+    const handleToggleMfa = async (userItem) => {
+        setActionUserId(userItem.id)
+        setError('')
+        try {
+            const res = await toggleMfa(userItem.id)
+            setSuccessMessage(res?.message || `MFA updated for @${userItem.username}.`)
+            setTimeout(() => setSuccessMessage(''), 4000)
+        } catch (err) {
+            console.error('Toggle MFA error:', err)
+            setError(err.response?.data?.error || 'Failed to toggle MFA setting.')
+            setTimeout(() => setError(''), 4000)
+        } finally {
+            setActionUserId(null)
+        }
+    }
 
     const initialFormState = {
         username: '',
@@ -399,6 +457,83 @@ const AdminDashboard = ({ user }) => {
                 </div>
             )}
 
+            {/* SLA Overdue Warning Banner */}
+            {oversightData?.overdue_count > 0 && (
+                <div className="p-4 bg-amber-50 border-l-4 border-amber-500 rounded-xl shadow-xs flex items-center justify-between text-amber-900">
+                    <div className="flex items-center gap-3">
+                        <Clock className="w-6 h-6 text-amber-600 flex-shrink-0 animate-pulse" />
+                        <div>
+                            <span className="font-extrabold text-sm block">SLA Overdue Warning (&gt; 3 Days Action Target)</span>
+                            <span className="text-xs text-amber-700">
+                                <strong>{oversightData.overdue_count}</strong> application(s) have exceeded the 3-day departmental processing window. Immediate operational clearance required.
+                            </span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={loadOversight}
+                        disabled={oversightLoading}
+                        className="btn bg-amber-200 hover:bg-amber-300 text-amber-900 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                    >
+                        {oversightLoading ? 'Refreshing...' : 'Refresh Pipeline'}
+                    </button>
+                </div>
+            )}
+
+            {/* Stage Pipeline Oversight Cards */}
+            {oversightData && (
+                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-emerald-600" />
+                            <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                                Real-Time Departmental Processing Pipeline (One Stop Center)
+                            </h2>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                            Total Registered: <strong>{oversightData.total_applications || 0}</strong> | Disputed: <strong className="text-rose-600">{oversightData.disputed_count || 0}</strong>
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 text-center">
+                        <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                            <div className="text-[11px] font-bold text-slate-500 uppercase">Accounts</div>
+                            <div className="text-lg font-extrabold text-slate-900">{oversightData.stage_counts?.SUBMITTED || 0}</div>
+                            <div className="text-[10px] text-slate-400">$10 Fee Queue</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
+                            <div className="text-[11px] font-bold text-amber-800 uppercase">Estates</div>
+                            <div className="text-lg font-extrabold text-amber-900">{oversightData.stage_counts?.ACCOUNTS_CLEARED || 0}</div>
+                            <div className="text-[10px] text-amber-600">Tenure & Scans</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200">
+                            <div className="text-[11px] font-bold text-blue-800 uppercase">LIMS</div>
+                            <div className="text-lg font-extrabold text-blue-900">{oversightData.stage_counts?.ESTATES_CLEARED || 0}</div>
+                            <div className="text-[10px] text-blue-600">Cadastral Match</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-purple-50 border border-purple-200">
+                            <div className="text-[11px] font-bold text-purple-800 uppercase">ZLC</div>
+                            <div className="text-lg font-extrabold text-purple-900">{oversightData.stage_counts?.LIMS_VERIFIED || 0}</div>
+                            <div className="text-[10px] text-purple-600">Dispute Clearance</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-teal-50 border border-teal-200">
+                            <div className="text-[11px] font-bold text-teal-800 uppercase">Surveyor Gen</div>
+                            <div className="text-lg font-extrabold text-teal-900">{oversightData.stage_counts?.ZLC_CLEARED || 0}</div>
+                            <div className="text-[10px] text-teal-600">Tech Survey</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200">
+                            <div className="text-[11px] font-bold text-indigo-800 uppercase">Valuation</div>
+                            <div className="text-lg font-extrabold text-indigo-900">{oversightData.stage_counts?.SURVEYED || 0}</div>
+                            <div className="text-[10px] text-indigo-600">Price & Discount</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                            <div className="text-[11px] font-bold text-emerald-800 uppercase">Approved</div>
+                            <div className="text-lg font-extrabold text-emerald-900">{oversightData.stage_counts?.APPROVED || oversightData.stage_counts?.COMPLETED || 0}</div>
+                            <div className="text-[10px] text-emerald-600">Ready for Deed</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard title="Total Staff: " value={totalStaff} icon={Users} bg="bg-blue-50" color="text-blue-600" />
                 <StatCard title="Administrators: " value={adminsCount} icon={Shield} bg="bg-purple-50" color="text-purple-600" />
@@ -478,6 +613,16 @@ const AdminDashboard = ({ user }) => {
                                                         </div>
                                                         <div className="text-xs text-gray-500">Username: @{userItem.username}</div>
                                                         <div className="text-xs text-gray-500">Email: {userItem.email}</div>
+                                                        <div className="flex items-center gap-1.5 mt-1">
+                                                            <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold border ${userItem.mfa_enabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                                                                {userItem.mfa_enabled ? 'MFA: Enabled' : 'MFA: Disabled'}
+                                                            </span>
+                                                            {userItem.must_change_password && (
+                                                                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                                                    Must Change Password
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -531,9 +676,27 @@ const AdminDashboard = ({ user }) => {
                                                             ? 'text-green-600 hover:bg-green-50'
                                                             : 'text-red-600 hover:bg-red-50'
                                                             }`}
-                                                        title={userItem.is_active ? 'Disable User' : 'Enable User'}
+                                                        title={userItem.is_active ? 'Deactivate Account' : 'Activate Account'}
                                                     >
                                                         {isRowBusy ? <Loader2 size={16} className="animate-spin" /> : <Power size={16} />}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={isRowBusy}
+                                                        onClick={() => handleToggleMfa(userItem)}
+                                                        className={`p-1.5 rounded transition-colors ${userItem.mfa_enabled ? 'text-teal-600 hover:bg-teal-50' : 'text-slate-400 hover:bg-slate-100'}`}
+                                                        title={userItem.mfa_enabled ? 'Disable MFA OTP for this officer' : 'Enable MFA OTP for this officer'}
+                                                    >
+                                                        <ShieldCheck size={16} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={isRowBusy}
+                                                        onClick={() => handleResetPassword(userItem)}
+                                                        className="text-amber-600 hover:bg-amber-50 p-1.5 rounded transition-colors"
+                                                        title="Reset Password to temporary 'Ministry' (enforces password change on next login)"
+                                                    >
+                                                        <KeyRound size={16} />
                                                     </button>
                                                     <button
                                                         type="button"

@@ -22,6 +22,7 @@ import TrackApplication from './pages/TrackApplication'
 import GISMapView from './pages/GISMapView'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import ChangePassword from './pages/ChangePassword'
 import MobileNav from './components/MobileNav'
 import axios from 'axios'
 import api from './services/api'
@@ -50,12 +51,12 @@ function normalizeStoredUser(rawUser) {
 
 export function getOfficerDashboardRoute(role) {
     const r = (role || '').toLowerCase().trim();
-    if (r === 'admin') return '/admin-dashboard';
-    if (r === 'accounts') return '/officer/accounts';
+    if (r === 'admin') return '/admin';
+    if (r === 'accounts' || r === 'finance') return '/officer/accounts';
     if (r === 'estates' || r === 'resettlement') return '/officer/estates';
     if (r === 'lims') return '/officer/lims';
     if (r === 'zlc') return '/officer/zlc';
-    if (r === 'surveyor' || r === 'gis') return '/officer/surveyor';
+    if (r === 'surveyor' || r === 'surveyor_general' || r === 'sg' || r === 'gis') return '/officer/sg';
     if (r === 'valuation') return '/officer/valuation';
     return '/officer-dashboard';
 }
@@ -66,9 +67,9 @@ function OfficerDashboardDispatcher({ user }) {
     if (role === 'estates' || role === 'resettlement') return <EstatesDashboard user={user} />;
     if (role === 'lims') return <LimsDashboard user={user} />;
     if (role === 'zlc') return <ZlcDashboard user={user} />;
-    if (role === 'surveyor' || role === 'gis') return <SurveyorGeneralDashboard user={user} />;
+    if (role === 'surveyor' || role === 'surveyor_general' || role === 'sg' || role === 'gis') return <SurveyorGeneralDashboard user={user} />;
     if (role === 'valuation') return <ValuationDashboard user={user} />;
-    if (role === 'admin') return <Navigate to="/admin-dashboard" />;
+    if (role === 'admin') return <Navigate to="/admin" replace />;
     return <OfficerDashboard user={user} />;
 }
 
@@ -402,6 +403,68 @@ function getInitialUser() {
     return null;
 }
 
+
+function AccessDeniedBanner() {
+    const location = useLocation();
+    const [msg, setMsg] = useState(location.state?.deniedMessage || null);
+
+    useEffect(() => {
+        if (location.state?.deniedMessage) {
+            setMsg(location.state.deniedMessage);
+            window.history.replaceState({}, document.title);
+            const timer = setTimeout(() => setMsg(null), 6000);
+            return () => clearTimeout(timer);
+        }
+    }, [location]);
+
+    if (!msg) return null;
+    return (
+        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-600 text-red-800 rounded-xl flex items-center justify-between shadow-xs animate-fade-in">
+            <div className="flex items-center gap-2.5">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                <span className="font-bold text-sm">{msg}</span>
+            </div>
+            <button
+                type="button"
+                onClick={() => setMsg(null)}
+                className="text-red-500 hover:text-red-800 font-bold px-2 py-1 rounded transition-colors"
+            >
+                ✕
+            </button>
+        </div>
+    );
+}
+
+function RoleProtectedRoute({ user, allowedRoles = [], requiredPrivilege = null, children }) {
+    if (!user) {
+        return <Navigate to="/officer-login" replace />;
+    }
+    if (user.is_active === false) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('admin_user');
+        localStorage.removeItem('authToken');
+        return <Navigate to="/officer-login" state={{ deniedMessage: "Account deactivated by System Administrator." }} replace />;
+    }
+    if (user.must_change_password) {
+        return <Navigate to="/change-password" replace />;
+    }
+    const currentRole = (user.role || '').toLowerCase().trim();
+    if (currentRole === 'admin') {
+        return children;
+    }
+    const isRoleAllowed = allowedRoles.some(r => r.toLowerCase() === currentRole);
+    let isPrivilegeAllowed = true;
+    if (requiredPrivilege) {
+        const privs = Array.isArray(user.privileges) ? user.privileges : [];
+        isPrivilegeAllowed = privs.includes(requiredPrivilege);
+    }
+    if (!isRoleAllowed || !isPrivilegeAllowed) {
+        const dest = currentRole === 'farmer' ? '/farmer-dashboard' : getOfficerDashboardRoute(currentRole);
+        return <Navigate to={dest} state={{ deniedMessage: "You do not have access to that page." }} replace />;
+    }
+    return children;
+}
+
 function App() {
     const [user, setUser] = useState(getInitialUser);
     const [isCheckingSession, setIsCheckingSession] = useState(false);
@@ -484,80 +547,110 @@ function App() {
                 <Header user={user} setUser={setUser} />
 
                 <main className="flex-1 max-w-7xl mx-auto w-full p-6">
+                    <AccessDeniedBanner />
                     <Routes>
                         <Route path="/" element={<Home user={user} setUser={setUser} />} />
                         <Route path="/login" element={<Login setUser={setUser} />} />
                         <Route path="/signup" element={<Signup />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password/:uidb64/:token" element={<ResetPassword />} />
+                        <Route path="/change-password" element={<ChangePassword user={user} setUser={setUser} />} />
                         <Route
                             path="/dashboard"
                             element={
                                 user ? (
-                                    user.role === 'farmer' ? <Navigate to="/farmer-dashboard" /> :
-                                        user.role === 'admin' ? <Navigate to="/admin-dashboard" /> :
-                                            <Navigate to={getOfficerDashboardRoute(user.role)} />
-                                ) : <Navigate to="/login" />
+                                    user.role === 'farmer' ? <Navigate to="/farmer-dashboard" replace /> :
+                                        user.role === 'admin' ? <Navigate to="/admin" replace /> :
+                                            <Navigate to={getOfficerDashboardRoute(user.role)} replace />
+                                ) : <Navigate to="/login" replace />
                             }
                         />
                         <Route
                             path="/farmer-dashboard"
-                            element={user && (user.role === 'farmer' || user.role === 'admin') ? <FarmerDashboard user={user} /> : <Navigate to="/login" />}
+                            element={user && (user.role === 'farmer' || user.role === 'admin') ? <FarmerDashboard user={user} /> : <Navigate to="/login" replace />}
                         />
                         <Route
+                            path="/admin"
+                            element={
+                                <RoleProtectedRoute user={user} allowedRoles={['admin']}>
+                                    <AdminDashboard user={user} />
+                                </RoleProtectedRoute>
+                            }
+                        />
+                        <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
+                        <Route
                             path="/officer/accounts"
-                            element={user && (user.role === 'accounts' || user.role === 'admin') ? <ErrorBoundary><AccountsDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                            element={
+                                <RoleProtectedRoute user={user} allowedRoles={['accounts', 'finance']}>
+                                    <ErrorBoundary><AccountsDashboard user={user} /></ErrorBoundary>
+                                </RoleProtectedRoute>
+                            }
                         />
                         <Route
                             path="/officer/estates"
-                            element={user && (user.role === 'estates' || user.role === 'resettlement' || user.role === 'admin') ? <ErrorBoundary><EstatesDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                            element={
+                                <RoleProtectedRoute user={user} allowedRoles={['estates', 'resettlement']}>
+                                    <ErrorBoundary><EstatesDashboard user={user} /></ErrorBoundary>
+                                </RoleProtectedRoute>
+                            }
                         />
                         <Route
                             path="/officer/lims"
-                            element={user && (user.role === 'lims' || user.role === 'admin') ? <ErrorBoundary><LimsDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                            element={
+                                <RoleProtectedRoute user={user} allowedRoles={['lims']}>
+                                    <ErrorBoundary><LimsDashboard user={user} /></ErrorBoundary>
+                                </RoleProtectedRoute>
+                            }
                         />
                         <Route
                             path="/officer/zlc"
-                            element={user && (user.role === 'zlc' || user.role === 'admin') ? <ErrorBoundary><ZlcDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                            element={
+                                <RoleProtectedRoute user={user} allowedRoles={['zlc']}>
+                                    <ErrorBoundary><ZlcDashboard user={user} /></ErrorBoundary>
+                                </RoleProtectedRoute>
+                            }
                         />
                         <Route
-                            path="/officer/surveyor"
-                            element={user && (user.role === 'surveyor' || user.role === 'gis' || user.role === 'admin') ? <ErrorBoundary><SurveyorGeneralDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                            path="/officer/sg"
+                            element={
+                                <RoleProtectedRoute user={user} allowedRoles={['surveyor', 'surveyor_general', 'sg', 'gis']}>
+                                    <ErrorBoundary><SurveyorGeneralDashboard user={user} /></ErrorBoundary>
+                                </RoleProtectedRoute>
+                            }
                         />
+                        <Route path="/officer/surveyor" element={<Navigate to="/officer/sg" replace />} />
                         <Route
                             path="/officer/valuation"
-                            element={user && (user.role === 'valuation' || user.role === 'admin') ? <ErrorBoundary><ValuationDashboard user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
+                            element={
+                                <RoleProtectedRoute user={user} allowedRoles={['valuation']}>
+                                    <ErrorBoundary><ValuationDashboard user={user} /></ErrorBoundary>
+                                </RoleProtectedRoute>
+                            }
                         />
                         <Route
                             path="/officer-dashboard"
-                            element={user && (user.role !== 'farmer') ? <ErrorBoundary><OfficerDashboardDispatcher user={user} /></ErrorBoundary> : <Navigate to="/officer-login" />}
-                        />
-                        <Route
-                            path="/admin-dashboard"
-                            element={user && user.role === 'admin' ? <AdminDashboard user={user} /> : <Navigate to="/login" />}
+                            element={
+                                user && user.role !== 'farmer' ? (
+                                    <ErrorBoundary><OfficerDashboardDispatcher user={user} /></ErrorBoundary>
+                                ) : (
+                                    <Navigate to="/officer-login" replace />
+                                )
+                            }
                         />
                         <Route
                             path="/reports"
                             element={
-                                user ? (
-                                    (user.role !== 'farmer' || (user.privileges && user.privileges.includes('view_reports'))) ? (
-                                        <Reports user={user} />
-                                    ) : (
-                                        <AccessDenied title="Reports Access" message="You do not have access to view official reports. Contact the System Administrator." />
-                                    )
-                                ) : <Navigate to="/login" />
+                                <RoleProtectedRoute user={user} allowedRoles={['admin', 'director']} requiredPrivilege="view_reports">
+                                    <Reports user={user} />
+                                </RoleProtectedRoute>
                             }
                         />
                         <Route
                             path="/audit-logs"
                             element={
-                                user ? (
-                                    (user.role === 'admin' || user.role === 'director' || (user.privileges && user.privileges.includes('view_audit_logs'))) ? (
-                                        <AuditLogs user={user} />
-                                    ) : (
-                                        <AccessDenied title="Audit Logs Access" message="You do not have access to view system audit logs. Only administrators and authorized officials can inspect them." />
-                                    )
-                                ) : <Navigate to="/login" />
+                                <RoleProtectedRoute user={user} allowedRoles={['admin', 'director']} requiredPrivilege="view_audit_logs">
+                                    <AuditLogs user={user} />
+                                </RoleProtectedRoute>
                             }
                         />
                         <Route path="/apply" element={<ApplicationForm user={user || { id: "beneficiary-local", name: "Beneficiary Applicant", role: "farmer" }} />} />

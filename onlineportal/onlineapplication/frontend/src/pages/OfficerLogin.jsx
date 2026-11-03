@@ -9,14 +9,14 @@ import {
 
 export function getOfficerRoute(role) {
     const r = (role || '').toLowerCase().trim();
-    if (r === 'admin') return '/admin-dashboard';
+    if (r === 'admin') return '/admin';
     if (r === 'accounts') return '/officer/accounts';
     if (r === 'estates' || r === 'resettlement') return '/officer/estates';
     if (r === 'lims') return '/officer/lims';
     if (r === 'zlc') return '/officer/zlc';
-    if (r === 'surveyor' || r === 'gis') return '/officer/surveyor';
+    if (r === 'surveyor' || r === 'surveyor_general' || r === 'sg' || r === 'gis') return '/officer/sg';
     if (r === 'valuation') return '/officer/valuation';
-    return '/officer-dashboard';
+    return '/officer/accounts';
 }
 
 export default function OfficerLogin({ setUser }) {
@@ -35,39 +35,6 @@ export default function OfficerLogin({ setUser }) {
 
     const routeByRole = (role) => {
         navigate(getOfficerRoute(role));
-    };
-
-    const tryLocalStaffLogin = (usernameInput, passwordInput) => {
-        try {
-            const localStaff = JSON.parse(localStorage.getItem('registered_staff') || '[]');
-            const cleanUser = (usernameInput || '').trim().toLowerCase();
-            const matched = localStaff.find(
-                s =>
-                    (s.username && s.username.toLowerCase() === cleanUser) ||
-                    (s.email && s.email.toLowerCase() === cleanUser)
-            );
-            if (matched) {
-                if (matched.is_active === false) {
-                    return { deactivated: true };
-                }
-                if (!matched.password || matched.password === passwordInput) {
-                    const localOfficerUser = {
-                        id: matched.id || `officer-${Date.now()}`,
-                        name: `${matched.first_name || ''} ${matched.last_name || ''}`.trim() || matched.username,
-                        username: matched.username,
-                        email: matched.email,
-                        role: matched.role || 'unassigned',
-                        department: matched.department || '',
-                        channels: matched.channels || [],
-                        privileges: matched.privileges || []
-                    };
-                    return { user: localOfficerUser };
-                }
-            }
-        } catch (e) {
-            console.log('Local staff check error:', e);
-        }
-        return null;
     };
 
     const handleLogin = async (e) => {
@@ -94,63 +61,49 @@ export default function OfficerLogin({ setUser }) {
             }
 
             const userData = response.data;
+            if (userData.token) {
+                localStorage.setItem('authToken', userData.token);
+            }
+
             if (userData.is_active === false) {
                 setError('Account deactivated by System Administrator.');
                 setIsLoading(false);
                 return;
             }
 
-            // Merge any locally updated privileges/channels for this officer
-            const localMatch = tryLocalStaffLogin(payload.username, payload.password);
-            const mergedUser = localMatch?.user
-                ? {
-                    ...userData,
-                    role: userData.role || localMatch.user.role,
-                    department: userData.department || localMatch.user.department,
-                    channels: (userData.channels && userData.channels.length > 0) ? userData.channels : localMatch.user.channels,
-                    privileges: (userData.privileges && userData.privileges.length > 0) ? userData.privileges : localMatch.user.privileges
-                }
-                : userData;
+            if (setUser) setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('admin_user', JSON.stringify(userData));
 
-            if (setUser) setUser(mergedUser);
-            localStorage.setItem('user', JSON.stringify(mergedUser));
-            localStorage.setItem('admin_user', JSON.stringify(mergedUser));
             recordLocalAuditLog({
                 action_type: 'OFFICER_LOGIN',
                 reference_number: 'AUTH-SESSION',
-                actor: mergedUser.name || mergedUser.username,
-                stage: (mergedUser.role || 'OFFICER').toUpperCase(),
-                comment: `Officer @${mergedUser.username} signed in to ${mergedUser.department || mergedUser.role} portal.`
+                actor: userData.name || userData.username,
+                stage: (userData.role || 'OFFICER').toUpperCase(),
+                comment: `Officer @${userData.username} signed in to ${userData.department || userData.role} portal.`
             });
-            routeByRole(mergedUser.role);
+
+            if (userData.must_change_password) {
+                navigate('/change-password');
+                return;
+            }
+
+            routeByRole(userData.role);
         } catch (err) {
             console.error('Officer login error:', err);
-            const backendError = err.response?.data?.error || err.response?.data?.detail;
-
-            // Check local registered_staff store (for accounts created offline or local cache)
-            const localResult = tryLocalStaffLogin(credentials.username, credentials.password);
-            if (localResult?.deactivated) {
-                setError('Account deactivated by System Administrator.');
-                setIsLoading(false);
-                return;
+            if (err.response?.status === 429) {
+                const retryAfter = err.response.headers?.['retry-after'];
+                const waitText = retryAfter ? `Please wait ${retryAfter} seconds` : 'Please wait 15 minutes';
+                setError(err.response?.data?.error || `Too many failed login attempts. ${waitText} and try again.`);
+            } else if (err.response?.status === 403) {
+                setError(err.response?.data?.error || 'Account deactivated by System Administrator.');
+            } else if (err.response?.status === 401) {
+                setError('Invalid username or password.');
+            } else if (!navigator.onLine || err.code === 'ERR_NETWORK') {
+                setError('You are offline. Please connect to the network to sign in.');
+            } else {
+                setError(err.response?.data?.error || 'Invalid username or password.');
             }
-            if (localResult?.user) {
-                const localOfficerUser = localResult.user;
-                if (setUser) setUser(localOfficerUser);
-                localStorage.setItem('user', JSON.stringify(localOfficerUser));
-                localStorage.setItem('admin_user', JSON.stringify(localOfficerUser));
-                recordLocalAuditLog({
-                    action_type: 'OFFICER_LOGIN',
-                    reference_number: 'AUTH-SESSION',
-                    actor: localOfficerUser.name || localOfficerUser.username,
-                    stage: (localOfficerUser.role || 'OFFICER').toUpperCase(),
-                    comment: `Officer @${localOfficerUser.username} signed in (offline fallback) to ${localOfficerUser.department || localOfficerUser.role}.`
-                });
-                routeByRole(localOfficerUser.role);
-                return;
-            }
-
-            setError(backendError || 'Invalid credentials. Please verify your officer username and password.');
         } finally {
             setIsLoading(false);
         }
@@ -235,7 +188,7 @@ export default function OfficerLogin({ setUser }) {
                                 className="input pl-10 text-sm w-full rounded-xl"
                                 value={credentials.username}
                                 onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                                placeholder="e.g. accounts@test.com or username"
+                                placeholder="e.g. accounts or accounts@lands.gov.zw"
                                 required
                                 autoComplete="off"
                             />

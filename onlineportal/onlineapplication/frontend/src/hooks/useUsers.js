@@ -33,6 +33,8 @@ const useUsers = () => {
                 channels: u.channels || [],
                 privileges: u.privileges || [],
                 is_active: u.is_active,
+                mfa_enabled: Boolean(u.mfa_enabled),
+                must_change_password: Boolean(u.must_change_password),
                 created: 'Recent'
             }))
             setUsers(mappedUsers)
@@ -85,6 +87,22 @@ const useUsers = () => {
         await fetchUsers() // Refresh list
         return res
     }
+    const resetPassword = async (userId) => {
+        const res = await userService.resetPassword(userId)
+        await fetchUsers()
+        return res
+    }
+
+    const toggleMfa = async (userId) => {
+        const res = await userService.toggleMfa(userId)
+        await fetchUsers()
+        return res
+    }
+
+    const fetchOversight = async () => {
+        return await userService.fetchOversight()
+    }
+
 
     // Fetch on mount
     useEffect(() => {
@@ -100,7 +118,10 @@ const useUsers = () => {
         createUser,
         updateUser,
         deleteUser,
-        toggleActive
+        toggleActive,
+        resetPassword,
+        toggleMfa,
+        fetchOversight
     }
 }
 

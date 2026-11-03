@@ -448,3 +448,4 @@ export default function LimsDashboard({ user }) {
         </div>
     );
 }
+

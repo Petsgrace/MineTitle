@@ -202,10 +202,14 @@ class StaffProfile(models.Model):
     national_id = models.CharField(max_length=30, blank=True, null=True, validators=[validate_zimbabwe_national_id])
     phone_number = models.CharField(max_length=30, blank=True, null=True)
     
-    # Staff Email OTP MFA
+    # Staff Email OTP MFA & Security Controls
     mfa_email_otp = models.CharField(max_length=128, blank=True, null=True)
     mfa_otp_created_at = models.DateTimeField(null=True, blank=True)
     mfa_verified_for_session = models.BooleanField(default=False)
+    must_change_password = models.BooleanField(default=True)
+    mfa_enabled = models.BooleanField(default=True)
+    failed_login_attempts = models.IntegerField(default=0)
+    locked_until = models.DateTimeField(null=True, blank=True)
 
     @property
     def is_unassigned(self) -> bool:
@@ -380,6 +384,8 @@ class TitleDeedApplication(models.Model):
     rejection_reason = models.TextField(blank=True, null=True)
     queried_by = models.CharField(max_length=100, blank=True, null=True)
     appeal_reason = models.TextField(blank=True, null=True)
+    is_queried = models.BooleanField(default=False)
+    query_message = models.TextField(blank=True, null=True)
 
     # Attached Documents (Whitelisted Secure Access)
     tenure_document = models.FileField(upload_to=secure_file_upload_path, null=True, blank=True)

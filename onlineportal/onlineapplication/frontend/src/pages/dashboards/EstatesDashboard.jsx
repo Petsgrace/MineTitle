@@ -48,6 +48,7 @@ export default function EstatesDashboard({ user }) {
         setSuccessMessage('');
         try {
             const payload = {
+                action_type: 'CLEAR',
                 officer_comments: comments.trim()
             };
             await api.post(`/applications/${selectedApp.id}/verify_estates/`, payload);
@@ -67,6 +68,45 @@ export default function EstatesDashboard({ user }) {
         } catch (err) {
             console.error('Estates clear error:', err);
             const msg = err.response?.data?.error || err.response?.data?.detail || 'Failed to clear application. Please try again.';
+            setErrorMessage(msg);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleCommitQuery = async (e) => {
+        if (e) e.preventDefault();
+        if (!selectedApp) return;
+        if (!comments.trim()) {
+            setErrorMessage('Please enter clarification or query remarks for the applicant in the comment box.');
+            return;
+        }
+
+        setActionLoading(true);
+        setErrorMessage('');
+        setSuccessMessage('');
+        try {
+            const payload = {
+                action_type: 'QUERY',
+                officer_comments: comments.trim()
+            };
+            await api.post(`/applications/${selectedApp.id}/verify_estates/`, payload);
+
+            recordLocalAuditLog({
+                action_type: 'ESTATES_QUERIED',
+                reference_number: selectedApp.reference_number,
+                actor: user?.name || user?.username || 'Estates Officer',
+                stage: 'ESTATES_QUERIED',
+                comment: `Estates query: ${comments.trim()}`
+            });
+
+            setSuccessMessage(`Query recorded for ${selectedApp.reference_number}. Clarification requested from beneficiary.`);
+            setApplications(prev => prev.filter(item => item.id !== selectedApp.id));
+            setSelectedApp(null);
+            setComments('');
+        } catch (err) {
+            console.error('Estates query error:', err);
+            const msg = err.response?.data?.error || err.response?.data?.detail || 'Failed to submit query. Please try again.';
             setErrorMessage(msg);
         } finally {
             setActionLoading(false);
@@ -356,7 +396,7 @@ export default function EstatesDashboard({ user }) {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                        <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100">
                             <button
                                 type="button"
                                 onClick={() => setSelectedApp(null)}
@@ -364,15 +404,26 @@ export default function EstatesDashboard({ user }) {
                             >
                                 Cancel
                             </button>
-                            <button
-                                type="button"
-                                onClick={handleCommitClear}
-                                disabled={actionLoading}
-                                className="btn bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2 rounded-xl text-xs flex items-center gap-2 shadow-sm"
-                            >
-                                {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                                <span>Commit & Release to LIMS</span>
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleCommitQuery}
+                                    disabled={actionLoading}
+                                    className="btn bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm"
+                                >
+                                    <AlertCircle size={14} />
+                                    <span>Query Beneficiary</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleCommitClear}
+                                    disabled={actionLoading}
+                                    className="btn bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2 rounded-xl text-xs flex items-center gap-2 shadow-sm"
+                                >
+                                    {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                                    <span>Clear & Release to LIMS</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -404,3 +455,4 @@ export default function EstatesDashboard({ user }) {
         </div>
     );
 }
+

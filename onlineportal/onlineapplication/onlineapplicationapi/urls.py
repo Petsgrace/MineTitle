@@ -2,7 +2,7 @@
 from rest_framework.routers import DefaultRouter
 from .views import (
     FarmerProfileViewSet, TitleDeedApplicationViewSet, RegisterViewSet, PaymentViewSet, AIWhatIfView, AIDistrictRiskView, 
-    LoginView, LogoutView, CheckSessionView, SetCSRFCookieView, 
+    LoginView, LogoutView, CheckSessionView, ChangePasswordView, SetCSRFCookieView, 
     AdminStaffViewSet, ReportViewSet, UserProfileView, 
     PasswordResetRequestView, PasswordResetConfirmView, IntegrationViewSet, 
     SecureDocumentDownloadView, TrackApplicationView, GISFarmsView, AIDisputePredictionView, BlockchainAuditVerifyView
@@ -21,6 +21,7 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('check-session/', CheckSessionView.as_view(), name='check-session'),
+    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('user/profile/', UserProfileView.as_view(), name='user-profile'),
     path('csrf-cookie/', SetCSRFCookieView.as_view(), name='csrf-cookie'),
     path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),

@@ -682,17 +682,22 @@ class StaffUserSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data['is_active'] = instance.is_active
         try:
             profile = instance.staff_profile
             data['role'] = profile.role or 'unassigned'
             data['department'] = profile.department or ''
             data['channels'] = profile.channels or []
             data['privileges'] = profile.privileges or []
+            data['mfa_enabled'] = getattr(profile, 'mfa_enabled', True)
+            data['must_change_password'] = getattr(profile, 'must_change_password', False)
         except Exception:
             data['role'] = 'admin' if instance.is_superuser else 'unassigned'
             data['department'] = ''
             data['channels'] = []
             data['privileges'] = []
+            data['mfa_enabled'] = True
+            data['must_change_password'] = False
         return data
 
     def validate(self, attrs):
@@ -768,6 +773,11 @@ class StaffUserSerializer(serializers.ModelSerializer):
             profile.channels = channels
         if privileges is not None:
             profile.privileges = privileges
+        if 'mfa_enabled' in self.initial_data:
+            profile.mfa_enabled = bool(self.initial_data['mfa_enabled'])
+        if 'is_active' in self.initial_data:
+            instance.is_active = bool(self.initial_data['is_active'])
+            instance.save()
         profile.save()
 
         return instance
