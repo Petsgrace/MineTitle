@@ -980,9 +980,36 @@ const server = http.createServer(async (req, res) => {
 
     // Serve static assets from STATIC_ROOT
     const safeRelPath = path.normalize(pathname).replace(/^(\.\.(\/|\\|$))+/, '');
-    const candidatePath = path.join(STATIC_ROOT, safeRelPath);
+    let candidatePath = path.join(STATIC_ROOT, safeRelPath);
+
+    // Sub-route asset resolution (e.g. /officer/assets/foo.js -> /assets/foo.js)
+    if (!fs.existsSync(candidatePath) || !fs.statSync(candidatePath).isFile()) {
+      const assetsIdx = pathname.indexOf('/assets/');
+      if (assetsIdx !== -1) {
+        const subAssetPath = pathname.slice(assetsIdx + 1);
+        const resolvedSubAsset = path.join(STATIC_ROOT, subAssetPath);
+        if (fs.existsSync(resolvedSubAsset) && fs.statSync(resolvedSubAsset).isFile()) {
+          candidatePath = resolvedSubAsset;
+        }
+      } else {
+        const baseName = path.basename(pathname);
+        const resolvedBase = path.join(STATIC_ROOT, baseName);
+        if (fs.existsSync(resolvedBase) && fs.statSync(resolvedBase).isFile()) {
+          candidatePath = resolvedBase;
+        }
+      }
+    }
+
     if (fs.existsSync(candidatePath) && fs.statSync(candidatePath).isFile()) {
       serveStaticFile(res, candidatePath);
+      return;
+    }
+
+    // Never serve index.html for static file extensions (.js, .css, .png, etc.)
+    const ext = path.extname(pathname).toLowerCase();
+    if (['.js', '.mjs', '.css', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.json', '.woff', '.woff2', '.ttf', '.map'].includes(ext)) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Asset not found: ' + pathname);
       return;
     }
 
