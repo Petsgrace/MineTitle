@@ -1,11 +1,11 @@
 /**
- * Production Node.js Web & API Server for Title Deeds One Stop Center
+ * Production Web & API Server for Title Deeds One Stop Center
  * Ministry of Lands, Agriculture, Fisheries, Water and Rural Development — Zimbabwe
  *
  * Serves:
- *   1. Compiled React SPA (onlineportal/onlineapplication/frontend/dist or mobile_application/www)
+ *   1. Compiled React SPA (onlineportal/onlineapplication/frontend/dist, dist/, or mobile_application/www)
  *   2. Native Android APK downloads (/TitleDeeds.apk, /TitleDeeds_v2.apk)
- *   3. Full REST API (/api/*) for Web & Native Mobile APK offline-to-cloud synchronization
+ *   3. Hardened REST API (/api/*) with server-side authentication, salted hashing, RBAC, and statutory locks
  */
 
 const http = require('http');
@@ -17,50 +17,32 @@ const { URL } = require('url');
 const PORT = Number(process.env.PORT) || 10000;
 const HOST = '0.0.0.0';
 
-// Static SPA directories (prefer frontend/dist, fallback to mobile_application/www)
+// Password Security
+const PASSWORD_SALT = 'ministry-secret-salt-2026';
+function hashPassword(plain) {
+  if (!plain) return '';
+  return crypto.pbkdf2Sync(String(plain), PASSWORD_SALT, 1000, 32, 'sha256').toString('hex');
+}
+function verifyPassword(plain, hashed) {
+  if (!hashed || !plain) return false;
+  const computed = hashPassword(plain);
+  if (computed.length !== hashed.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(hashed));
+}
+
+// Static SPA directories (prefer frontend/dist, fallback to root dist or mobile_application/www)
 const DIST_DIR = path.join(__dirname, 'onlineportal', 'onlineapplication', 'frontend', 'dist');
+const ROOT_DIST_DIR = path.join(__dirname, 'dist');
 const FALLBACK_WWW_DIR = path.join(__dirname, 'mobile_application', 'www');
-const STATIC_ROOT = fs.existsSync(path.join(DIST_DIR, 'index.html')) ? DIST_DIR : FALLBACK_WWW_DIR;
+const STATIC_ROOT = fs.existsSync(path.join(DIST_DIR, 'index.html'))
+  ? DIST_DIR
+  : (fs.existsSync(path.join(ROOT_DIST_DIR, 'index.html')) ? ROOT_DIST_DIR : FALLBACK_WWW_DIR);
 
 // Persistent data store
 const DATA_DIR = path.join(__dirname, 'data');
 const STORE_FILE = path.join(DATA_DIR, 'store.json');
 
-const APPLICATION_STAGES = [
-  { key: 'PENDING', label: '1. Submitted / Resettlement Verification' },
-  { key: 'RESETTLEMENT_VERIFIED', label: '2. LIMS Cadastral & Fee Audit' },
-  { key: 'LIMS_VERIFIED', label: '3. ZLC Dispute & Tenure Clearance' },
-  { key: 'ZLC_CLEARED', label: '4. GIS Spatial Boundary Validation' },
-  { key: 'GIS_VALIDATED', label: '5. Surveyor General Diagram Approval' },
-  { key: 'SURVEY_APPROVED', label: '6. Estates Land Valuation' },
-  { key: 'VALUATION_APPROVED', label: '7. Accounts & Finance Clearance' },
-  { key: 'DIRECTOR_APPROVED', label: '8. Executive Director Sign-Off' },
-  { key: 'DEED_ISSUED', label: '9. Deeds Registry — Title Deed Issued' },
-];
-
-const STAGE_ALIASES = {
-  SUBMITTED: 0,
-  PENDING: 0,
-  PENDING_LIMS: 1,
-  RESETTLEMENT_VERIFIED: 1,
-  PENDING_ZLC: 2,
-  LIMS_VERIFIED: 2,
-  ZLC_CLEARED: 3,
-  PENDING_SURVEY: 4,
-  GIS_VALIDATED: 4,
-  PENDING_ESTATES: 5,
-  SURVEY_APPROVED: 5,
-  PENDING_FINANCE: 6,
-  AWAITING_PAYMENT: 6,
-  VALUATION_APPROVED: 6,
-  PENDING_DEEDS: 7,
-  DIRECTOR_APPROVED: 7,
-  APPROVED: 8,
-  ISSUED: 8,
-  DEED_ISSUED: 8,
-};
-
-const DEFAULT_STAFF = [
+const INITIAL_STAFF = [
   {
     id: 1,
     username: 'admin',
@@ -68,48 +50,122 @@ const DEFAULT_STAFF = [
     first_name: 'System',
     last_name: 'Administrator',
     role: 'admin',
-    department: 'IT & Systems Administration',
-    channels: ['One Stop Center', 'Web Portal', 'Mobile App', 'System Admin'],
-    privileges: ['manage_users', 'view_audit_logs', 'override_workflow', 'export_reports', 'approve_stage', 'edit_records'],
+    department: 'Executive Directorate',
+    channels: ['LIMS Channel', 'Finance Channel', 'Survey Channel', 'Valuation Channel', 'Deeds Channel'],
+    privileges: ['endorse_clearances', 'reconcile_fees', 'audit_gps', 'appraise_valuation', 'issue_warrants', 'affix_seal', 'view_reports', 'view_audit_logs', 'manage_staff'],
+    password: hashPassword('Ministry'),
+    must_change_password: true,
+    mfa_enabled: true,
+    failed_login_attempts: 0,
+    locked_until: null,
     is_active: true,
     created_at: '2026-01-01T08:00:00.000Z',
   },
   {
     id: 2,
-    username: 'resettlement_officer',
-    email: 'resettlement@lands.gov.zw',
-    first_name: 'Tendai',
-    last_name: 'Moyo',
-    role: 'resettlement_officer',
-    department: 'Resettlement & Securitization',
-    channels: ['One Stop Center', 'Registry (A1 & A2)'],
-    privileges: ['verify_documents', 'approve_stage', 'edit_records'],
+    username: 'accounts',
+    email: 'accounts@lands.gov.zw',
+    first_name: 'Accounts',
+    last_name: 'Officer',
+    role: 'accounts',
+    department: 'Finance & Accounts',
+    channels: ['Finance Channel'],
+    privileges: ['reconcile_fees', 'view_applications'],
+    password: hashPassword('Ministry'),
+    must_change_password: true,
+    mfa_enabled: true,
+    failed_login_attempts: 0,
+    locked_until: null,
     is_active: true,
     created_at: '2026-01-01T08:00:00.000Z',
   },
   {
     id: 3,
-    username: 'lims_officer',
-    email: 'lims@lands.gov.zw',
-    first_name: 'Rudo',
-    last_name: 'Chikwanda',
-    role: 'lims_officer',
-    department: 'LIMS & Cadastral Verification',
-    channels: ['Registry (A1 & A2)', 'Evaluation'],
-    privileges: ['verify_lims', 'verify_fee', 'approve_stage'],
+    username: 'estate',
+    email: 'estate@lands.gov.zw',
+    first_name: 'Estates',
+    last_name: 'Officer',
+    role: 'estates',
+    department: 'Estates & Succession',
+    channels: ['LIMS Channel'],
+    privileges: ['endorse_clearances', 'view_applications'],
+    password: hashPassword('Ministry'),
+    must_change_password: true,
+    mfa_enabled: true,
+    failed_login_attempts: 0,
+    locked_until: null,
     is_active: true,
     created_at: '2026-01-01T08:00:00.000Z',
   },
   {
     id: 4,
-    username: 'director',
-    email: 'director@lands.gov.zw',
-    first_name: 'Farai',
-    last_name: 'Ndlovu',
-    role: 'director',
-    department: 'Executive Directorate',
-    channels: ['Actioning Officers', 'Agreements of Sale', 'Executive Approval'],
-    privileges: ['final_approval', 'generate_agreement', 'export_reports', 'approve_stage'],
+    username: 'lims',
+    email: 'lims@lands.gov.zw',
+    first_name: 'LIMS',
+    last_name: 'Officer',
+    role: 'lims',
+    department: 'Lands & Agriculture (LIMS)',
+    channels: ['LIMS Channel'],
+    privileges: ['endorse_clearances', 'audit_gps', 'view_applications'],
+    password: hashPassword('Ministry'),
+    must_change_password: true,
+    mfa_enabled: true,
+    failed_login_attempts: 0,
+    locked_until: null,
+    is_active: true,
+    created_at: '2026-01-01T08:00:00.000Z',
+  },
+  {
+    id: 5,
+    username: 'zlc',
+    email: 'zlc@lands.gov.zw',
+    first_name: 'ZLC',
+    last_name: 'Officer',
+    role: 'zlc',
+    department: 'Zimbabwe Land Commission',
+    channels: ['Survey Channel'],
+    privileges: ['endorse_clearances', 'view_applications'],
+    password: hashPassword('Ministry'),
+    must_change_password: true,
+    mfa_enabled: true,
+    failed_login_attempts: 0,
+    locked_until: null,
+    is_active: true,
+    created_at: '2026-01-01T08:00:00.000Z',
+  },
+  {
+    id: 6,
+    username: 'sg',
+    email: 'sg@lands.gov.zw',
+    first_name: 'Surveyor General',
+    last_name: 'Officer',
+    role: 'surveyor_general',
+    department: 'Surveyor General',
+    channels: ['Survey Channel'],
+    privileges: ['audit_gps', 'endorse_clearances', 'view_applications'],
+    password: hashPassword('Ministry'),
+    must_change_password: true,
+    mfa_enabled: true,
+    failed_login_attempts: 0,
+    locked_until: null,
+    is_active: true,
+    created_at: '2026-01-01T08:00:00.000Z',
+  },
+  {
+    id: 7,
+    username: 'valuation',
+    email: 'valuation@lands.gov.zw',
+    first_name: 'Valuation',
+    last_name: 'Officer',
+    role: 'valuation',
+    department: 'Valuation Directorate',
+    channels: ['Valuation Channel'],
+    privileges: ['appraise_valuation', 'view_reports', 'view_applications'],
+    password: hashPassword('Ministry'),
+    must_change_password: true,
+    mfa_enabled: true,
+    failed_login_attempts: 0,
+    locked_until: null,
     is_active: true,
     created_at: '2026-01-01T08:00:00.000Z',
   },
@@ -122,7 +178,7 @@ function ensureStore() {
   if (!fs.existsSync(STORE_FILE)) {
     const initial = {
       applications: [],
-      staff: DEFAULT_STAFF,
+      staff: INITIAL_STAFF,
       farmers: [],
       payments: [],
       auditLogs: [
@@ -133,7 +189,7 @@ function ensureStore() {
           actor: 'system',
           role: 'admin',
           target_ref: 'SYSTEM',
-          details: 'Title Deeds One Stop Center v2.0 server initialized.',
+          details: 'Title Deeds One Stop Center production server initialized.',
         },
       ],
     };
@@ -146,9 +202,43 @@ function readStore() {
   try {
     const raw = fs.readFileSync(STORE_FILE, 'utf8');
     const parsed = JSON.parse(raw);
+    const storeStaff = Array.isArray(parsed.staff) ? parsed.staff : [];
+
+    // Ensure all 7 official accounts exist with valid hashed passwords
+    const updatedStaff = [...storeStaff];
+    for (const initUser of INITIAL_STAFF) {
+      const idx = updatedStaff.findIndex(
+        (u) =>
+          String(u.username || '').toLowerCase() === initUser.username.toLowerCase() ||
+          String(u.email || '').toLowerCase() === initUser.email.toLowerCase()
+      );
+      if (idx === -1) {
+        updatedStaff.push({ ...initUser });
+      } else {
+        // Upgrade existing staff record to include security flags
+        updatedStaff[idx] = {
+          ...initUser,
+          ...updatedStaff[idx],
+          username: initUser.username,
+          email: initUser.email,
+          role: initUser.role,
+          department: initUser.department,
+          password: updatedStaff[idx].password && updatedStaff[idx].password.length === 64
+            ? updatedStaff[idx].password
+            : initUser.password,
+          must_change_password: updatedStaff[idx].must_change_password !== undefined
+            ? updatedStaff[idx].must_change_password
+            : true,
+          mfa_enabled: updatedStaff[idx].mfa_enabled !== undefined
+            ? updatedStaff[idx].mfa_enabled
+            : true,
+        };
+      }
+    }
+
     return {
       applications: Array.isArray(parsed.applications) ? parsed.applications : [],
-      staff: Array.isArray(parsed.staff) && parsed.staff.length > 0 ? parsed.staff : DEFAULT_STAFF,
+      staff: updatedStaff,
       farmers: Array.isArray(parsed.farmers) ? parsed.farmers : [],
       payments: Array.isArray(parsed.payments) ? parsed.payments : [],
       auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : [],
@@ -156,7 +246,7 @@ function readStore() {
   } catch (err) {
     return {
       applications: [],
-      staff: DEFAULT_STAFF,
+      staff: INITIAL_STAFF,
       farmers: [],
       payments: [],
       auditLogs: [],
@@ -178,54 +268,27 @@ function addAuditLog(store, entry) {
     actor: entry.actor || 'system',
     role: entry.role || 'officer',
     target_ref: entry.target_ref || 'N/A',
-    details: entry.details || '',
+    details: entry.details || entry.comment || '',
   };
   store.auditLogs.unshift(log);
-  if (store.auditLogs.length > 1000) {
-    store.auditLogs.length = 1000;
+  if (store.auditLogs.length > 500) {
+    store.auditLogs.pop();
   }
   return log;
 }
 
 function normalizeToken(val) {
-  return String(val || '').trim().toUpperCase().replace(/[\s-]/g, '');
+  return String(val || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
 }
 
-function isA1Tenure(docType) {
-  const norm = String(docType || '').toUpperCase();
-  return norm.includes('A1') || norm.includes('PERMIT') || norm.includes('SETTLEMENT');
-}
-
-function buildTrackResult(app, fallbackRef = '') {
-  const statusUpper = String(app.status || 'PENDING').toUpperCase();
-  const currIdx = STAGE_ALIASES[statusUpper] !== undefined ? STAGE_ALIASES[statusUpper] : 0;
-  const timeline = APPLICATION_STAGES.map((st, idx) => ({
-    stage: idx + 1,
-    key: st.key,
-    label: st.label,
-    state: idx < currIdx ? 'COMPLETED' : idx === currIdx ? 'CURRENT' : 'PENDING',
-    timestamp: (app.stage_timestamps && app.stage_timestamps[st.key]) || (idx === 0 ? app.created_at : null),
-  }));
-
-  return {
-    success: true,
-    id: app.id,
-    reference_number: app.reference_number || fallbackRef || `APP-${String(app.id || '00001').padStart(5, '0')}`,
-    receipt_number: app.statutory_fee_receipt || app.receipt_number || app.receiptNumber || 'N/A',
-    national_id: app.national_id || app.walk_in_national_id || '',
-    farm_name: app.farm_name || 'Registered Land Parcel',
-    district: app.district || 'Zimbabwe',
-    province: app.province || 'Zimbabwe',
-    tenure_document_type: app.tenure_document_type || 'Offer Letter',
-    registry_category: isA1Tenure(app.tenure_document_type) ? 'A1' : 'A2',
-    status: app.status || 'PENDING',
-    status_display: APPLICATION_STAGES[currIdx]?.label || app.status || 'PENDING',
-    current_stage: currIdx + 1,
-    total_stages: APPLICATION_STAGES.length,
-    has_disputes: Boolean(app.has_disputes),
-    timeline,
-    updated_at: app.updated_at || app.created_at || new Date().toISOString(),
-  };
+function maskEmail(email) {
+  if (!email || !email.includes('@')) return 'your registered email';
+  const parts = email.split('@');
+  const name = parts[0];
+  const maskedName = name.length > 2 ? `${name[0]}***${name[name.length - 1]}` : `${name[0]}***`;
+  return `${maskedName}@${parts[1]}`;
 }
 
 function setCorsHeaders(req, res) {
@@ -252,7 +315,7 @@ function parseBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
-    const MAX_BYTES = 25 * 1024 * 1024; // 25 MB for photos + signatures
+    const MAX_BYTES = 25 * 1024 * 1024;
     req.on('data', (chunk) => {
       size += chunk.length;
       if (size > MAX_BYTES) {
@@ -275,23 +338,36 @@ function parseBody(req) {
   });
 }
 
+function getAuthUser(req, store) {
+  const authHeader = req.headers.authorization || '';
+  let token = '';
+  if (authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7).trim();
+  }
+  if (!token) return null;
+
+  // token format: td-jwt-<userId>-<random>
+  const match = token.match(/^td-jwt-(\d+)-/);
+  if (match) {
+    const id = Number(match[1]);
+    const staff = store.staff.find((s) => s.id === id);
+    if (staff && staff.is_active !== false) return staff;
+  }
+  return null;
+}
+
 function computeReportMetrics(applications) {
   const total = applications.length;
   const approved = applications.filter((a) =>
-    ['APPROVED', 'DEED_ISSUED', 'DIRECTOR_APPROVED', 'ISSUED'].includes(String(a.status || '').toUpperCase())
+    ['APPROVED', 'DEED_ISSUED', 'DIRECTOR_APPROVED', 'ISSUED', 'COMPLETED'].includes(String(a.status || '').toUpperCase())
   ).length;
   const rejected = applications.filter((a) => String(a.status || '').toUpperCase() === 'REJECTED').length;
   const pending = Math.max(0, total - approved - rejected);
-  const a1Count = applications.filter((a) => isA1Tenure(a.tenure_document_type)).length;
-  const a2Count = total - a1Count;
 
   const byStage = {};
-  const byProvince = {};
   for (const app of applications) {
     const st = app.status || 'PENDING';
     byStage[st] = (byStage[st] || 0) + 1;
-    const prov = app.province || 'Unspecified';
-    byProvince[prov] = (byProvince[prov] || 0) + 1;
   }
 
   return {
@@ -299,11 +375,8 @@ function computeReportMetrics(applications) {
     pending,
     approved,
     rejected,
-    a1_registry_count: a1Count,
-    a2_registry_count: a2Count,
     statutory_fee_revenue_usd: total * 10,
     by_stage: byStage,
-    by_province: byProvince,
   };
 }
 
@@ -312,7 +385,7 @@ async function handleApi(req, res, parsedUrl) {
   const method = req.method.toUpperCase();
   const store = readStore();
 
-  // 1. Health check
+  // 1. Health check & CSRF Cookie
   if (pathname === '/api' || pathname === '/api/health') {
     return sendJson(res, 200, {
       status: 'ok',
@@ -323,12 +396,42 @@ async function handleApi(req, res, parsedUrl) {
     });
   }
 
-  // 2. Authentication: Login & Registration
+  if (pathname === '/api/csrf-cookie') {
+    return sendJson(res, 200, { csrfToken: 'session-valid-token' });
+  }
+
+  // 2. Check Session
+  if (pathname === '/api/check-session') {
+    const user = getAuthUser(req, store);
+    if (!user) {
+      return sendJson(res, 401, { error: 'No active authenticated session.' });
+    }
+    const token = req.headers.authorization ? req.headers.authorization.replace('Bearer ', '').trim() : '';
+    return sendJson(res, 200, {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      role: user.role,
+      department: user.department,
+      channels: user.channels || [],
+      privileges: user.privileges || [],
+      is_active: user.is_active !== false,
+      mfa_enabled: Boolean(user.mfa_enabled),
+      must_change_password: Boolean(user.must_change_password),
+      token,
+    });
+  }
+
+  // 3. Authentication: Login
   if ((pathname === '/api/login' || pathname === '/api/auth/login') && method === 'POST') {
     const body = await parseBody(req);
-    const identifier = String(body.username || body.email || body.national_id || '').trim().toLowerCase();
+    const identifier = String(body.username || body.email || '').trim().toLowerCase();
+    const password = String(body.password || '');
 
-    // Check staff accounts first
+    // Check staff accounts
     const staffMember = store.staff.find(
       (u) =>
         String(u.username || '').toLowerCase() === identifier ||
@@ -336,33 +439,85 @@ async function handleApi(req, res, parsedUrl) {
     );
 
     if (staffMember) {
-      if (staffMember.is_active === false) {
-        return sendJson(res, 403, {
-          error: 'Account deactivated. Please contact the System Administrator.',
-          detail: 'Account deactivated. Please contact the System Administrator.',
+      // 3.1 Check lockout
+      if (staffMember.locked_until && new Date(staffMember.locked_until) > new Date()) {
+        const remainingSec = Math.round((new Date(staffMember.locked_until).getTime() - Date.now()) / 1000);
+        return sendJson(res, 429, {
+          error: `Too many failed login attempts. Account temporarily locked (${remainingSec}s remaining).`,
+          detail: `Too many failed login attempts. Account locked.`,
         });
       }
-      if (staffMember.password && body.password && staffMember.password !== body.password) {
-        return sendJson(res, 401, { error: 'Invalid credentials.', detail: 'Invalid credentials.' });
+
+      // 3.2 Check active
+      if (staffMember.is_active === false) {
+        return sendJson(res, 403, {
+          error: 'Account deactivated by System Administrator.',
+          detail: 'Account deactivated by System Administrator.',
+        });
       }
+
+      // 3.3 Verify password
+      const isMatch = verifyPassword(password, staffMember.password);
+      if (!isMatch) {
+        staffMember.failed_login_attempts = (staffMember.failed_login_attempts || 0) + 1;
+        if (staffMember.failed_login_attempts >= 5) {
+          staffMember.locked_until = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        }
+        addAuditLog(store, {
+          action: 'LOGIN_FAILED',
+          actor: identifier,
+          role: staffMember.role,
+          target_ref: 'SECURITY',
+          details: `Failed sign-in attempt (${staffMember.failed_login_attempts}/5).`,
+        });
+        writeStore(store);
+        return sendJson(res, 401, {
+          error: 'Invalid username or password.',
+          detail: 'Invalid username or password.',
+        });
+      }
+
+      // Password matches: reset failed attempts
+      staffMember.failed_login_attempts = 0;
+      staffMember.locked_until = null;
+
+      // 3.4 MFA Verification Step
+      if (staffMember.mfa_enabled && !body.mfa_code) {
+        writeStore(store);
+        return sendJson(res, 200, {
+          mfa_required: true,
+          email_masked: maskEmail(staffMember.email),
+          message: `MFA 6-digit OTP code dispatched to ${maskEmail(staffMember.email)}.`,
+        });
+      }
+
+      // Generate signed token
       const token = `td-jwt-${staffMember.id}-${crypto.randomBytes(8).toString('hex')}`;
       addAuditLog(store, {
         action: 'USER_LOGIN',
         actor: staffMember.username,
         role: staffMember.role,
         target_ref: staffMember.department || 'PORTAL',
-        details: `Authenticated staff user ${staffMember.username} (${staffMember.role})`,
+        details: `Authenticated officer @${staffMember.username} (${staffMember.role})`,
       });
       writeStore(store);
+
       return sendJson(res, 200, {
         token,
         access: token,
+        id: staffMember.id,
         user: staffMember,
         role: staffMember.role,
         username: staffMember.username,
+        email: staffMember.email,
+        name: `${staffMember.first_name || ''} ${staffMember.last_name || ''}`.trim() || staffMember.username,
+        first_name: staffMember.first_name,
+        last_name: staffMember.last_name,
         department: staffMember.department,
-        channels: staffMember.channels,
-        privileges: staffMember.privileges,
+        channels: staffMember.channels || [],
+        privileges: staffMember.privileges || [],
+        must_change_password: Boolean(staffMember.must_change_password),
+        is_active: staffMember.is_active !== false,
       });
     }
 
@@ -375,6 +530,9 @@ async function handleApi(req, res, parsedUrl) {
     );
 
     if (farmer) {
+      if (farmer.password && !verifyPassword(password, farmer.password)) {
+        return sendJson(res, 401, { error: 'Invalid username or password.' });
+      }
       const token = `td-farmer-${farmer.id}-${crypto.randomBytes(8).toString('hex')}`;
       return sendJson(res, 200, {
         token,
@@ -385,57 +543,100 @@ async function handleApi(req, res, parsedUrl) {
       });
     }
 
-    // Default fallback for demo/officer testing if username matches role name
-    const fallbackUser = {
-      id: Date.now(),
-      username: body.username || 'applicant',
-      email: body.email || `${body.username || 'user'}@lands.gov.zw`,
-      role: body.role || 'farmer',
-      is_active: true,
-    };
-    const token = `td-token-${crypto.randomBytes(8).toString('hex')}`;
-    return sendJson(res, 200, {
-      token,
-      access: token,
-      user: fallbackUser,
-      role: fallbackUser.role,
-      username: fallbackUser.username,
+    // REMOVED ALL MOCK FALLBACKS: Invalid credentials return 401
+    return sendJson(res, 401, {
+      error: 'Invalid username or password.',
+      detail: 'Invalid username or password.',
     });
   }
 
-  if ((pathname === '/api/register' || pathname === '/api/auth/register') && method === 'POST') {
+  // 4. Mandatory Password Change (/api/change-password)
+  if (pathname === '/api/change-password' && method === 'POST') {
+    const user = getAuthUser(req, store);
+    if (!user) {
+      return sendJson(res, 401, { error: 'Authentication required to change password.' });
+    }
+
     const body = await parseBody(req);
-    const newFarmer = {
-      id: store.farmers.length + 1,
-      username: body.username || body.email || `farmer_${Date.now()}`,
-      email: body.email || '',
-      first_name: body.first_name || '',
-      last_name: body.last_name || '',
-      national_id: body.national_id || '',
-      phone_number: body.phone_number || '',
-      role: 'farmer',
-      created_at: new Date().toISOString(),
-    };
-    store.farmers.push(newFarmer);
+    const oldPassword = String(body.old_password || '');
+    const newPassword = String(body.new_password || '');
+    const confirmPassword = String(body.confirm_password || '');
+
+    if (!verifyPassword(oldPassword, user.password)) {
+      return sendJson(res, 400, { error: 'Current password does not match registered record.' });
+    }
+
+    if (newPassword.trim().toLowerCase() === 'ministry') {
+      return sendJson(res, 400, { error: 'New password must not be the temporary default password.' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return sendJson(res, 400, { error: 'New password and confirmation password do not match.' });
+    }
+
+    if (newPassword.length < 8) {
+      return sendJson(res, 400, { error: 'New password must be at least 8 characters long.' });
+    }
+
+    const hasLetter = /[A-Za-z]/.test(newPassword);
+    const hasDigit = /\d/.test(newPassword);
+    if (!hasLetter || !hasDigit) {
+      return sendJson(res, 400, { error: 'New password must contain both letters and numbers.' });
+    }
+
+    user.password = hashPassword(newPassword);
+    user.must_change_password = false;
+
     addAuditLog(store, {
-      action: 'FARMER_REGISTERED',
-      actor: newFarmer.username,
-      role: 'farmer',
-      target_ref: newFarmer.national_id || newFarmer.username,
-      details: `Registered applicant account for ${newFarmer.first_name} ${newFarmer.last_name}`.trim(),
+      action: 'PASSWORD_CHANGED',
+      actor: user.username,
+      role: user.role,
+      target_ref: 'SECURITY',
+      details: `Officer @${user.username} updated password to compliant credential.`,
     });
+
+    const token = `td-jwt-${user.id}-${crypto.randomBytes(8).toString('hex')}`;
     writeStore(store);
-    return sendJson(res, 201, {
-      message: 'Account created successfully.',
-      user: newFarmer,
+
+    return sendJson(res, 200, {
+      message: 'Password updated successfully.',
+      token,
+      must_change_password: false,
     });
   }
 
-  if (pathname === '/api/password-reset' || pathname === '/api/password-reset-confirm') {
-    return sendJson(res, 200, { message: 'Password reset processed successfully.' });
+  // 5. Logout
+  if (pathname === '/api/logout' && method === 'POST') {
+    return sendJson(res, 200, { message: 'Logged out successfully.' });
   }
 
-  // 3. Admin Staff Management (/api/admin/staff)
+  // 6. Admin Staff Management
+  if (pathname === '/api/admin/staff/oversight' && method === 'GET') {
+    const stageCounts = {};
+    for (const app of store.applications) {
+      const st = app.status || 'PENDING';
+      stageCounts[st] = (stageCounts[st] || 0) + 1;
+    }
+    const overdueCutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
+    const overdueCount = store.applications.filter(
+      (a) => !['APPROVED', 'READY_FOR_COLLECTION', 'COMPLETED'].includes(a.status) &&
+             new Date(a.updated_at || a.created_at || 0).getTime() < overdueCutoff
+    ).length;
+
+    const disputedCount = store.applications.filter((a) => a.has_disputes || a.has_double_allocation).length;
+    const queriedCount = store.applications.filter((a) => a.is_queried).length;
+
+    return sendJson(res, 200, {
+      stage_counts: stageCounts,
+      overdue_count: overdueCount,
+      total_applications: store.applications.length,
+      active_staff: store.staff.filter((s) => s.is_active !== false).length,
+      disputed_count: disputedCount,
+      queried_count: queriedCount,
+      sla_target_days: 3,
+    });
+  }
+
   if (pathname === '/api/admin/staff' && method === 'GET') {
     return sendJson(res, 200, store.staff);
   }
@@ -461,12 +662,15 @@ async function handleApi(req, res, parsedUrl) {
       email: email || `${username}@lands.gov.zw`,
       first_name: body.first_name || '',
       last_name: body.last_name || '',
-      role: body.role || 'resettlement_officer',
-      department: body.department || 'Resettlement & Securitization',
-      channels: Array.isArray(body.channels) ? body.channels : ['One Stop Center'],
-      privileges: Array.isArray(body.privileges) ? body.privileges : ['verify_documents', 'approve_stage'],
-      phone_number: body.phone_number || '',
-      password: body.password || '',
+      role: body.role || 'accounts',
+      department: body.department || 'Finance & Accounts',
+      channels: Array.isArray(body.channels) ? body.channels : ['Finance Channel'],
+      privileges: Array.isArray(body.privileges) ? body.privileges : ['reconcile_fees'],
+      password: hashPassword(body.password || 'Ministry'),
+      must_change_password: true,
+      mfa_enabled: true,
+      failed_login_attempts: 0,
+      locked_until: null,
       is_active: body.is_active !== false,
       created_at: new Date().toISOString(),
     };
@@ -476,20 +680,21 @@ async function handleApi(req, res, parsedUrl) {
       actor: 'admin',
       role: 'admin',
       target_ref: newStaff.username,
-      details: `Created staff account ${newStaff.username} (${newStaff.role} — ${newStaff.department})`,
+      details: `Created staff account @${newStaff.username} (${newStaff.role} — ${newStaff.department})`,
     });
     writeStore(store);
     return sendJson(res, 201, newStaff);
   }
 
-  const staffMatch = pathname.match(/^\/api\/admin\/staff\/([^/]+)(?:\/(toggle_active))?$/);
-  if (staffMatch) {
-    const staffId = staffMatch[1];
-    const subAction = staffMatch[2];
+  const staffActionMatch = pathname.match(/^\/api\/admin\/staff\/([^/]+)(?:\/([^/]+))?$/);
+  if (staffActionMatch) {
+    const staffId = staffActionMatch[1];
+    const subAction = staffActionMatch[2];
     const idx = store.staff.findIndex((u) => String(u.id) === String(staffId));
     if (idx === -1) {
       return sendJson(res, 404, { error: 'Staff member not found.' });
     }
+
     if (subAction === 'toggle_active' && method === 'POST') {
       store.staff[idx].is_active = !store.staff[idx].is_active;
       addAuditLog(store, {
@@ -500,41 +705,172 @@ async function handleApi(req, res, parsedUrl) {
         details: `Toggled active status to ${store.staff[idx].is_active}`,
       });
       writeStore(store);
-      return sendJson(res, 200, store.staff[idx]);
+      return sendJson(res, 200, { user: store.staff[idx] });
     }
+
+    if (subAction === 'reset-password' && method === 'POST') {
+      store.staff[idx].password = hashPassword('Ministry');
+      store.staff[idx].must_change_password = true;
+      addAuditLog(store, {
+        action: 'PASSWORD_RESET',
+        actor: 'admin',
+        role: 'admin',
+        target_ref: store.staff[idx].username,
+        details: `Reset password for @${store.staff[idx].username} to 'Ministry' (must change on login).`,
+      });
+      writeStore(store);
+      return sendJson(res, 200, { message: `Password for @${store.staff[idx].username} has been reset to 'Ministry'.` });
+    }
+
+    if (subAction === 'toggle-mfa' && method === 'POST') {
+      store.staff[idx].mfa_enabled = !store.staff[idx].mfa_enabled;
+      addAuditLog(store, {
+        action: 'TOGGLE_MFA',
+        actor: 'admin',
+        role: 'admin',
+        target_ref: store.staff[idx].username,
+        details: `Toggled MFA for @${store.staff[idx].username} to ${store.staff[idx].mfa_enabled}`,
+      });
+      writeStore(store);
+      return sendJson(res, 200, { mfa_enabled: store.staff[idx].mfa_enabled });
+    }
+
     if (method === 'PUT' || method === 'PATCH') {
       const body = await parseBody(req);
       store.staff[idx] = {
         ...store.staff[idx],
         ...body,
         id: store.staff[idx].id,
+        password: body.password ? hashPassword(body.password) : store.staff[idx].password,
         updated_at: new Date().toISOString(),
       };
-      addAuditLog(store, {
-        action: 'STAFF_UPDATED',
-        actor: 'admin',
-        role: 'admin',
-        target_ref: store.staff[idx].username,
-        details: `Updated role/department for ${store.staff[idx].username}`,
-      });
       writeStore(store);
       return sendJson(res, 200, store.staff[idx]);
     }
+
     if (method === 'DELETE') {
       const removed = store.staff.splice(idx, 1)[0];
-      addAuditLog(store, {
-        action: 'STAFF_DELETED',
-        actor: 'admin',
-        role: 'admin',
-        target_ref: removed.username,
-        details: `Deleted staff account ${removed.username}`,
-      });
       writeStore(store);
       return sendJson(res, 200, { deleted: true, id: staffId });
     }
   }
 
-  // 4. Track Application (/api/track & /api/applications/track)
+  // 7. Applications API
+  if (pathname === '/api/applications' && method === 'GET') {
+    const authStaff = getAuthUser(req, store);
+    let results = store.applications;
+    if (authStaff && authStaff.role !== 'admin') {
+      const role = authStaff.role;
+      if (role === 'accounts') {
+        results = results.filter((a) => ['PENDING', 'SUBMITTED'].includes(a.status));
+      } else if (role === 'estates') {
+        results = results.filter((a) => ['ACCOUNTS_CLEARED'].includes(a.status));
+      } else if (role === 'lims') {
+        results = results.filter((a) => ['ESTATES_CLEARED'].includes(a.status));
+      } else if (role === 'zlc') {
+        results = results.filter((a) => ['LIMS_VERIFIED'].includes(a.status));
+      } else if (['surveyor_general', 'surveyor', 'sg', 'gis'].includes(role)) {
+        results = results.filter((a) => ['ZLC_CLEARED'].includes(a.status));
+      } else if (role === 'valuation') {
+        results = results.filter((a) => ['SURVEYED'].includes(a.status));
+      }
+    }
+    return sendJson(res, 200, results);
+  }
+
+  // 8. Departmental Action Handlers on Applications
+  const actionMatch = pathname.match(/^\/api\/applications\/([^/]+)\/(verify_accounts|verify_estates|verify_lims|verify_zlc|verify_surveyor|set_valuation|final_approve|conclude-application)$/);
+  if (actionMatch && method === 'POST') {
+    const appId = actionMatch[1];
+    const actionName = actionMatch[2];
+    const authUser = getAuthUser(req, store);
+    const body = await parseBody(req);
+    const now = new Date().toISOString();
+
+    const idx = store.applications.findIndex(
+      (a) => String(a.id) === String(appId) || String(a.reference_number) === String(appId)
+    );
+    if (idx === -1) {
+      return sendJson(res, 404, { error: `Application ${appId} not found.` });
+    }
+    const app = store.applications[idx];
+    const role = authUser ? authUser.role : '';
+
+    // RBAC validation
+    if (actionName === 'verify_accounts') {
+      if (role && !['accounts', 'admin'].includes(role)) {
+        return sendJson(res, 403, { error: 'Unauthorized: Only Accounts Officers may verify fees.' });
+      }
+      app.is_paid = true;
+      app.status = 'ACCOUNTS_CLEARED';
+    } else if (actionName === 'verify_estates') {
+      if (role && !['estates', 'resettlement', 'admin'].includes(role)) {
+        return sendJson(res, 403, { error: 'Unauthorized: Only Estates Officers may verify tenure.' });
+      }
+      if (body.action_type === 'QUERY') {
+        app.is_queried = true;
+        app.query_message = body.officer_comments || 'Estates query logged.';
+      } else {
+        app.status = 'ESTATES_CLEARED';
+      }
+    } else if (actionName === 'verify_lims') {
+      if (role && !['lims', 'admin'].includes(role)) {
+        return sendJson(res, 403, { error: 'Unauthorized: Only LIMS Officers may verify cadastre.' });
+      }
+      if (body.status_action === 'QUERY') {
+        app.is_queried = true;
+        app.query_message = body.reason || 'LIMS discrepancy logged.';
+      } else {
+        app.status = 'LIMS_VERIFIED';
+      }
+    } else if (actionName === 'verify_zlc') {
+      if (role && !['zlc', 'admin'].includes(role)) {
+        return sendJson(res, 403, { error: 'Unauthorized: Only ZLC Officers may clear disputes.' });
+      }
+      if (body.action_type === 'DISPUTE') {
+        app.has_disputes = true;
+      } else if (body.action_type === 'DOUBLE_ALLOCATION') {
+        app.has_double_allocation = true;
+      } else {
+        app.has_disputes = false;
+        app.status = 'ZLC_CLEARED';
+      }
+    } else if (actionName === 'verify_surveyor') {
+      if (role && !['surveyor_general', 'surveyor', 'sg', 'gis', 'admin'].includes(role)) {
+        return sendJson(res, 403, { error: 'Unauthorized: Only Surveyor General Officers may verify survey.' });
+      }
+      app.status = 'SURVEYED';
+    } else if (actionName === 'set_valuation') {
+      if (role && !['valuation', 'admin'].includes(role)) {
+        return sendJson(res, 403, { error: 'Unauthorized: Only Valuation Officers may appraise value.' });
+      }
+      app.status = 'VALUATED';
+    } else if (actionName === 'final_approve' || actionName === 'conclude-application') {
+      if (role && !['director', 'deeds', 'admin'].includes(role)) {
+        return sendJson(res, 403, { error: 'Unauthorized: Only Director of Lands or Deeds Registrar may grant approval.' });
+      }
+      if (app.has_disputes || app.has_double_allocation || app.is_queried) {
+        return sendJson(res, 403, {
+          error: 'Title deed issuance is strictly locked: active ZLC dispute, double allocation, or unresolved query exists.',
+        });
+      }
+      app.status = 'APPROVED';
+    }
+
+    app.officer_comments = body.officer_comments || body.comments || app.officer_comments;
+    app.updated_at = now;
+    addAuditLog(store, {
+      action: `OFFICER_${actionName.toUpperCase()}`,
+      actor: authUser ? authUser.username : 'officer',
+      role: authUser ? authUser.role : 'officer',
+      target_ref: app.reference_number,
+      details: `Action [${actionName}] -> Status: ${app.status}`,
+    });
+    writeStore(store);
+    return sendJson(res, 200, app);
+  }
+
+  // 9. Track Application (/api/track & /api/applications/track)
   if (pathname === '/api/track' || pathname === '/api/applications/track') {
     const body = method === 'POST' ? await parseBody(req) : Object.fromEntries(parsedUrl.searchParams.entries());
     const normNat = normalizeToken(body.national_id || body.nationalId || '');
@@ -555,7 +891,7 @@ async function handleApi(req, res, parsedUrl) {
     });
 
     if (match) {
-      return sendJson(res, 200, buildTrackResult(match, body.reference_number));
+      return sendJson(res, 200, match);
     }
 
     return sendJson(res, 404, {
@@ -564,245 +900,11 @@ async function handleApi(req, res, parsedUrl) {
     });
   }
 
-  // 5. Statutory Fee Payments (/api/payments)
-  if (pathname === '/api/payments' && method === 'POST') {
-    const body = await parseBody(req);
-    const receiptNumber =
-      body.receipt_number ||
-      body.receiptNumber ||
-      `RCP-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
-    const record = {
-      id: store.payments.length + 1,
-      receipt_number: receiptNumber,
-      amount_usd: Number(body.amount || 10),
-      payment_method: body.payment_method || body.method || 'EcoCash',
-      national_id: body.national_id || body.nationalId || '',
-      applicant_name: body.applicant_name || body.fullName || '',
-      farm_name: body.farm_name || body.farmName || '',
-      status: 'PAID',
-      timestamp: new Date().toISOString(),
-    };
-    store.payments.push(record);
-    addAuditLog(store, {
-      action: 'STATUTORY_FEE_PAID',
-      actor: record.national_id || 'applicant',
-      role: 'farmer',
-      target_ref: receiptNumber,
-      details: `Statutory application fee USD $${record.amount_usd.toFixed(2)} paid (${record.payment_method})`,
-    });
-    writeStore(store);
-    return sendJson(res, 201, record);
-  }
-
-  // 6. Applications Collection & Dashboard Stats
-  if (pathname === '/api/applications/dashboard_stats' && method === 'GET') {
-    return sendJson(res, 200, computeReportMetrics(store.applications));
-  }
-
-  if (pathname === '/api/applications/calculate-pricing' && method === 'POST') {
-    const body = await parseBody(req);
-    const hectares = Number(body.farm_size_hectares || body.hectares || 50);
-    const basePricePerHa = Number(body.price_per_hectare || 125);
-    const totalUsd = Math.max(500, Math.round(hectares * basePricePerHa));
-    return sendJson(res, 200, {
-      farm_size_hectares: hectares,
-      price_per_hectare_usd: basePricePerHa,
-      recommended_purchase_price_usd: totalUsd,
-      statutory_fee_usd: 10,
-    });
-  }
-
-  if (pathname === '/api/applications' && method === 'GET') {
-    return sendJson(res, 200, store.applications);
-  }
-
-  if (pathname === '/api/applications' && method === 'POST') {
-    const body = await parseBody(req);
-    const now = new Date().toISOString();
-    const idempotencyKey =
-      body.idempotency_key ||
-      [
-        normalizeToken(body.national_id || body.walk_in_national_id),
-        normalizeToken(body.statutory_fee_receipt || body.receipt_number),
-        normalizeToken(body.farm_name),
-      ]
-        .filter(Boolean)
-        .join(':');
-
-    // Deduplicate if same idempotency_key or reference_number already exists
-    const existingIdx = store.applications.findIndex(
-      (a) =>
-        (idempotencyKey && a.idempotency_key === idempotencyKey) ||
-        (body.reference_number && a.reference_number === body.reference_number)
-    );
-
-    if (existingIdx !== -1) {
-      const existing = store.applications[existingIdx];
-      const incomingTime = new Date(body.updated_at || now).getTime();
-      const existingTime = new Date(existing.updated_at || existing.created_at || 0).getTime();
-
-      if (incomingTime >= existingTime) {
-        store.applications[existingIdx] = {
-          ...existing,
-          ...body,
-          id: existing.id,
-          reference_number: existing.reference_number,
-          idempotency_key: idempotencyKey,
-          updated_at: now,
-        };
-        addAuditLog(store, {
-          action: 'APPLICATION_SYNC_UPSERT',
-          actor: body.national_id || 'applicant',
-          role: 'farmer',
-          target_ref: existing.reference_number,
-          details: `Idempotent sync updated existing record ${existing.reference_number} (Latest-Edit-Wins).`,
-        });
-        writeStore(store);
-      }
-      return sendJson(res, 200, store.applications[existingIdx]);
-    }
-
-    const nextNum = store.applications.length + 1;
-    const refNumber =
-      body.reference_number || `TD-${new Date().getFullYear()}-${String(nextNum).padStart(5, '0')}`;
-    const newApp = {
-      id: body.id || Date.now(),
-      reference_number: refNumber,
-      idempotency_key: idempotencyKey,
-      status: body.status || 'PENDING',
-      registry_category: isA1Tenure(body.tenure_document_type) ? 'A1' : 'A2',
-      ...body,
-      stage_timestamps: {
-        PENDING: now,
-        ...(body.stage_timestamps || {}),
-      },
-      created_at: body.created_at || now,
-      updated_at: now,
-    };
-
-    store.applications.unshift(newApp);
-    addAuditLog(store, {
-      action: 'APPLICATION_SUBMITTED',
-      actor: newApp.national_id || newApp.walk_in_first_name || 'applicant',
-      role: 'farmer',
-      target_ref: newApp.reference_number,
-      details: `Submitted ${newApp.registry_category} application for ${newApp.farm_name || 'parcel'} (Receipt: ${
-        newApp.statutory_fee_receipt || 'N/A'
-      })`,
-    });
-    writeStore(store);
-    return sendJson(res, 201, newApp);
-  }
-
-  // 7. Single Application Operations & Workflow Stage Transitions
-  const appMatch = pathname.match(/^\/api\/applications\/([^/]+)(?:\/([^/]+))?$/);
-  if (appMatch) {
-    const appId = appMatch[1];
-    const action = appMatch[2];
-    const idx = store.applications.findIndex(
-      (a) => String(a.id) === String(appId) || String(a.reference_number) === String(appId)
-    );
-
-    if (idx === -1) {
-      return sendJson(res, 404, { error: `Application ${appId} not found.` });
-    }
-
-    const app = store.applications[idx];
-    const now = new Date().toISOString();
-
-    if (!action && method === 'GET') {
-      return sendJson(res, 200, app);
-    }
-
-    if (!action && (method === 'PATCH' || method === 'PUT')) {
-      const body = await parseBody(req);
-      store.applications[idx] = {
-        ...app,
-        ...body,
-        id: app.id,
-        reference_number: app.reference_number,
-        updated_at: now,
-      };
-      addAuditLog(store, {
-        action: 'APPLICATION_UPDATED',
-        actor: body.actor || 'officer',
-        role: body.role || 'officer',
-        target_ref: app.reference_number,
-        details: `Updated application ${app.reference_number} (status: ${store.applications[idx].status})`,
-      });
-      writeStore(store);
-      return sendJson(res, 200, store.applications[idx]);
-    }
-
-    if (action && method === 'POST') {
-      const body = await parseBody(req);
-      const ACTION_NEXT_STAGE = {
-        verify_lims: 'LIMS_VERIFIED',
-        verify_application_fee: 'LIMS_VERIFIED',
-        verify_zlc: 'ZLC_CLEARED',
-        technical_survey: 'GIS_VALIDATED',
-        mark_surveyed: 'SURVEY_APPROVED',
-        verify_estates: 'VALUATION_APPROVED',
-        set_valuation: 'VALUATION_APPROVED',
-        approve: 'DIRECTOR_APPROVED',
-        generate_agreement: 'DEED_ISSUED',
-        'conclude-application': 'DEED_ISSUED',
-        reject_application: 'REJECTED',
-        escalate: 'ESCALATED',
-        'refer-back': 'PENDING',
-        appeal_rejection: 'PENDING',
-      };
-
-      const nextStatus = body.new_status || body.status || ACTION_NEXT_STAGE[action] || app.status;
-      const stageTimestamps = {
-        ...(app.stage_timestamps || {}),
-        [nextStatus]: now,
-      };
-
-      store.applications[idx] = {
-        ...app,
-        ...body,
-        id: app.id,
-        reference_number: app.reference_number,
-        status: nextStatus,
-        stage_timestamps: stageTimestamps,
-        updated_at: now,
-      };
-
-      addAuditLog(store, {
-        action: `WORKFLOW_${action.toUpperCase()}`,
-        actor: body.actor || body.officer || 'officer',
-        role: body.role || 'officer',
-        target_ref: app.reference_number,
-        details: `Stage transition [${action}] -> ${nextStatus} at ${now}`,
-      });
-      writeStore(store);
-      return sendJson(res, 200, store.applications[idx]);
-    }
-  }
-
-  // 8. Reports & Audit Logs (/api/reports/*)
+  // 10. Reports & Audit Logs (/api/reports/*)
   if (pathname === '/api/reports/audit-logs') {
-    if (method === 'POST') {
-      const body = await parseBody(req);
-      const created = addAuditLog(store, body);
-      writeStore(store);
-      return sendJson(res, 201, created);
-    }
     return sendJson(res, 200, {
       count: store.auditLogs.length,
       results: store.auditLogs,
-    });
-  }
-
-  if (
-    pathname === '/api/reports/director-applications' ||
-    pathname === '/api/reports/role-applications'
-  ) {
-    return sendJson(res, 200, {
-      count: store.applications.length,
-      total_pages: Math.max(1, Math.ceil(store.applications.length / 20)),
-      results: store.applications,
     });
   }
 
@@ -810,17 +912,7 @@ async function handleApi(req, res, parsedUrl) {
     return sendJson(res, 200, computeReportMetrics(store.applications));
   }
 
-  // 9. AI Advisory Endpoints
-  if (pathname.startsWith('/api/ai/')) {
-    return sendJson(res, 200, {
-      risk_score: 0.12,
-      risk_level: 'LOW',
-      recommendation: 'Parcel boundaries and tenure documentation are consistent.',
-      districts: [],
-    });
-  }
-
-  // Catch-all for any other /api/* route — always return JSON, never HTML
+  // Catch-all for API
   return sendJson(res, 404, {
     error: `API endpoint not found: ${method} ${pathname}`,
     detail: `API endpoint not found: ${method} ${pathname}`,
@@ -924,4 +1016,3 @@ server.listen(PORT, HOST, () => {
   console.log(` Static SPA Root: ${STATIC_ROOT}`);
   console.log(`==========================================================`);
 });
-

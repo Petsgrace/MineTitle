@@ -59,3 +59,4 @@ class SignedTokenAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('Account deactivated by System Administrator.')
 
         return (user, token)
+
